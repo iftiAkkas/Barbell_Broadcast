@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { View, TextInput, Button, Text, StyleSheet, Alert, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebase/config';
 import { useRouter } from 'expo-router';
@@ -22,7 +22,6 @@ export default function Signup() {
     }
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      // Optionally save firstName, lastName, birthday, gender to your database
       Alert.alert('Account created!');
       router.replace('/');
     } catch (error) {
@@ -30,7 +29,6 @@ export default function Signup() {
     }
   };
 
-  // Placeholder handlers for social auth
   const handleGoogleSignup = () => {
     Alert.alert('Google signup not implemented');
   };
@@ -39,76 +37,87 @@ export default function Signup() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>Sign Up</Text>
-      <View style={styles.row}>
-        <TextInput
-          style={[styles.input, { flex: 1, marginRight: 8 }]}
-          placeholder="First name"
-          onChangeText={setFirstName}
-          value={firstName}
-        />
-        <TextInput
-          style={[styles.input, { flex: 1 }]}
-          placeholder="Last name"
-          onChangeText={setLastName}
-          value={lastName}
-        />
-      </View>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        onChangeText={setEmail}
-        value={email}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Birthday (YYYY-MM-DD)"
-        onChangeText={setBirthday}
-        value={birthday}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Gender (optional)"
-        onChangeText={setGender}
-        value={gender}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        onChangeText={setPassword}
-        value={password}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Confirm Password"
-        secureTextEntry
-        onChangeText={setConfirmPassword}
-        value={confirmPassword}
-      />
-      <Button title="Sign Up" onPress={handleSignup} />
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={60}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+        <View style={styles.container}>
+          <Text style={styles.heading}>Sign Up</Text>
+          <View style={styles.row}>
+            <TextInput
+              style={[styles.input, { flex: 1, marginRight: 8 }]}
+              placeholder="First name"
+              onChangeText={setFirstName}
+              value={firstName}
+            />
+            <TextInput
+              style={[styles.input, { flex: 1 }]}
+              placeholder="Last name"
+              onChangeText={setLastName}
+              value={lastName}
+            />
+          </View>
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            onChangeText={setEmail}
+            value={email}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Birthday (YYYY-MM-DD)"
+            onChangeText={setBirthday}
+            value={birthday}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Gender (optional)"
+            onChangeText={setGender}
+            value={gender}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            secureTextEntry
+            onChangeText={setPassword}
+            value={password}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Confirm Password"
+            secureTextEntry
+            onChangeText={setConfirmPassword}
+            value={confirmPassword}
+          />
+          <Button title="Sign Up" onPress={handleSignup} />
 
-      {/* Social signup icons */}
-      <View style={styles.socialRow}>
-        <TouchableOpacity onPress={handleGoogleSignup} style={styles.socialButton}>
-          <FontAwesome name="google" size={32} color="#DB4437" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleFacebookSignup} style={styles.socialButton}>
-          <FontAwesome name="facebook" size={32} color="#4267B2" />
-        </TouchableOpacity>
-      </View>
+          <View style={styles.socialRow}>
+            <TouchableOpacity onPress={handleGoogleSignup} style={styles.socialButton}>
+              <FontAwesome name="google" size={32} color="#DB4437" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleFacebookSignup} style={styles.socialButton}>
+              <FontAwesome name="facebook" size={32} color="#4267B2" />
+            </TouchableOpacity>
+          </View>
 
-      <TouchableOpacity onPress={() => router.push('/login')}>
-        <Text style={styles.linkText}>Already have an account? Login</Text>
-      </TouchableOpacity>
-    </View>
+          <TouchableOpacity onPress={() => router.push('/login')}>
+            <Text style={styles.linkText}>Already have an account? Login</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
