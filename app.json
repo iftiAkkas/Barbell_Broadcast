@@ -1,5 +1,6 @@
 {
   "expo": {
+    "scheme":"FitnessTracker",
     "name": "Fitness_Tracker_app",
     "slug": "Fitness_Tracker_app",
     "version": "1.0.0",
@@ -24,6 +25,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-router"
+    ]
   }
 }
