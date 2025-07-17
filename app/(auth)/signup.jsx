@@ -3,6 +3,7 @@ import { View, TextInput, Button, Text, StyleSheet, Alert, TouchableOpacity } fr
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebase/config';
 import { useRouter } from 'expo-router';
+import { FontAwesome } from '@expo/vector-icons';
 
 export default function Signup() {
   const [firstName, setFirstName] = useState('');
@@ -27,6 +28,14 @@ export default function Signup() {
     } catch (error) {
       Alert.alert('Signup Failed', error.message);
     }
+  };
+
+  // Placeholder handlers for social auth
+  const handleGoogleSignup = () => {
+    Alert.alert('Google signup not implemented');
+  };
+  const handleFacebookSignup = () => {
+    Alert.alert('Facebook signup not implemented');
   };
 
   return (
@@ -81,6 +90,17 @@ export default function Signup() {
         value={confirmPassword}
       />
       <Button title="Sign Up" onPress={handleSignup} />
+
+      {/* Social signup icons */}
+      <View style={styles.socialRow}>
+        <TouchableOpacity onPress={handleGoogleSignup} style={styles.socialButton}>
+          <FontAwesome name="google" size={32} color="#DB4437" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleFacebookSignup} style={styles.socialButton}>
+          <FontAwesome name="facebook" size={32} color="#4267B2" />
+        </TouchableOpacity>
+      </View>
+
       <TouchableOpacity onPress={() => router.push('/login')}>
         <Text style={styles.linkText}>Already have an account? Login</Text>
       </TouchableOpacity>
@@ -111,9 +131,17 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 16,
   },
+  socialRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginVertical: 16,
+  },
+  socialButton: {
+    marginHorizontal: 16,
+  },
   linkText: {
     marginTop: 20,
     color: '#1e90ff',
-    textAlign:'center',
+    textAlign: 'center',
   },
 });
