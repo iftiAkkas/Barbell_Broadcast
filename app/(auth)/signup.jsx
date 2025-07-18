@@ -1,11 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, TextInput, Button, Text, StyleSheet, Alert, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../../firebase/config';
 import { useRouter } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+import Constants from 'expo-constants';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function Signup() {
+  const router = useRouter();
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    androidClientId: '231925583013-8nj0b0tm9qm87uii2luud7ksdfg8n569.apps.googleusercontent.com',
+    //iosClientId: 'YOUR_IOS_CLIENT_ID.apps.googleusercontent.com',
+    webClientId: '796056669419-t1cvpfhgd7nsta9qdhm05cm6ipnc1856.apps.googleusercontent.com',
+  });
+
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -13,7 +25,19 @@ export default function Signup() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [birthday, setBirthday] = useState('');
   const [gender, setGender] = useState('');
-  const router = useRouter();
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const { id_token } = response.authentication;
+      const credential = GoogleAuthProvider.credential(id_token);
+      signInWithCredential(auth, credential)
+        .then(() => {
+          Alert.alert('Signed in with Google!');
+          router.replace('/');
+        })
+        .catch((err) => Alert.alert('Google Sign-In Failed', err.message));
+    }
+  }, [response]);
 
   const handleSignup = async () => {
     if (password !== confirmPassword) {
@@ -23,17 +47,11 @@ export default function Signup() {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       Alert.alert('Account created!');
-      router.replace('/');
+      router.replace('/(auth)/login');
     } catch (error) {
       Alert.alert('Signup Failed', error.message);
+      //router.replace('/')
     }
-  };
-
-  const handleGoogleSignup = () => {
-    Alert.alert('Google signup not implemented');
-  };
-  const handleFacebookSignup = () => {
-    Alert.alert('Facebook signup not implemented');
   };
 
   return (
@@ -96,10 +114,18 @@ export default function Signup() {
           <Button title="Sign Up" onPress={handleSignup} />
 
           <View style={styles.socialRow}>
-            <TouchableOpacity onPress={handleGoogleSignup} style={styles.socialButton}>
+            <TouchableOpacity
+              onPress={() => promptAsync()}
+              style={styles.socialButton}
+              disabled={!request}
+            >
               <FontAwesome name="google" size={32} color="#DB4437" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleFacebookSignup} style={styles.socialButton}>
+
+            <TouchableOpacity
+              onPress={() => Alert.alert('Facebook not implemented yet')}
+              style={styles.socialButton}
+            >
               <FontAwesome name="facebook" size={32} color="#4267B2" />
             </TouchableOpacity>
           </View>
@@ -146,7 +172,16 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   socialButton: {
+    width: 48,
+    height: 48,
     marginHorizontal: 16,
+    borderWidth: 2,
+    borderColor: '#ccc',
+    borderRadius: 24,
+    padding: 0,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   linkText: {
     marginTop: 20,

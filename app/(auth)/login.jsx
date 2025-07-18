@@ -13,9 +13,10 @@ export default function Login() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       Alert.alert('Logged in!');
-      router.replace('/');
+      router.replace('/pages/Dashboard');
     } catch (error) {
       Alert.alert('Login Failed', error.message);
+      router.replace('/');
     }
   };
 
