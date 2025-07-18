@@ -1,8 +1,17 @@
-import React from 'react';
+import React,{useState,useEffect} from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import ProgressBar from '../components/ProgressBar';
+import {auth} from '../../firebase/config';
 
-export default function Dashboard({ userName = 'Ifti' }) {
+export default function Dashboard() {
+  const [name, setName] = useState('');
+
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (user) {
+      setName(user.displayName || 'User');
+    }
+  }, []);
   // Sample data (replace with real data from your app state)
   const stepsToday = 7500;
   const stepsGoal = 10000;
@@ -15,7 +24,7 @@ export default function Dashboard({ userName = 'Ifti' }) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       {/* Welcome */}
-      <Text style={styles.welcome}>Hi, {userName}! 👋</Text>
+      <Text style={styles.welcome}>Hi, {name}! 👋</Text>
       <Text style={styles.subWelcome}>Ready to start your workout?</Text>
 
       {/* Summary */}
@@ -72,7 +81,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#fdfdfd',
     flex: 1,
-    marginTop:60,
+    marginTop: 60,
   },
   contentContainer: {
     padding: 20,

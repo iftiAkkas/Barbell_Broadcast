@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, Button, Text, StyleSheet, Alert, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { createUserWithEmailAndPassword, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithCredential, GoogleAuthProvider, updateProfile } from 'firebase/auth';
 import { auth } from '../../firebase/config';
 import { useRouter } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
@@ -45,7 +45,13 @@ export default function Signup() {
       return;
     }
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential=await createUserWithEmailAndPassword(auth, email, password);
+      const user=userCredential.user;
+
+      await updateProfile(user, {
+      displayName: firstName,
+    });
+
       Alert.alert('Account created!');
       router.replace('/(auth)/login');
     } catch (error) {
