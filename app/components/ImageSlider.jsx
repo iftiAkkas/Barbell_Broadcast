@@ -30,14 +30,14 @@ export default function ImageSlider() {
     const interval = setInterval(() => {
       let nextIndex = currentIndex + 1;
       if (nextIndex >= dataWithSpacers.length - 1) {
-        // Loop back to first image (index 1, because 0 and last are spacers)
-        nextIndex = 1;
+        // When reaching the right spacer, smoothly scroll back to first image
+        flatListRef.current?.scrollToIndex({ index: 1, animated: true });
+        setCurrentIndex(1);
+      } else {
+        // Scroll to next item
+        flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
+        setCurrentIndex(nextIndex);
       }
-      flatListRef.current?.scrollToOffset({
-        offset: nextIndex * ITEM_WIDTH,
-        animated: true,
-      });
-      setCurrentIndex(nextIndex);
     }, AUTO_SCROLL_INTERVAL);
 
     return () => clearInterval(interval);
@@ -50,7 +50,7 @@ export default function ImageSlider() {
       listener: (event) => {
         const offsetX = event.nativeEvent.contentOffset.x;
         const index = Math.round(offsetX / ITEM_WIDTH);
-        if (index !== currentIndex) {
+        if (index >= 1 && index <= sliderImages.length) {
           setCurrentIndex(index);
         }
       },
@@ -70,6 +70,12 @@ export default function ImageSlider() {
       contentContainerStyle={{ alignItems: 'center' }}
       onScroll={onScroll}
       scrollEventThrottle={16}
+      initialScrollIndex={1} // Start at first real image
+      getItemLayout={(data, index) => ({
+        length: ITEM_WIDTH,
+        offset: ITEM_WIDTH * index,
+        index,
+      })}
       renderItem={({ item, index }) => {
         if (!item.image) {
           return <View style={{ width: SPACER_WIDTH }} />;

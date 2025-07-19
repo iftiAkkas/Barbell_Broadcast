@@ -1,6 +1,7 @@
 import React from 'react';
 import { Image, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import BodyParts from '../components/BodyParts';
 import ImageSlider from '../components/ImageSlider';
 export default function Exercises() {
   return (
@@ -14,16 +15,24 @@ export default function Exercises() {
           <Image source={require('../../assets/avatar.png')} style={styles.avatar} />
         </View>
       </View>
+
       {/* image slider */}
       <View>
         <ImageSlider/>
-        {/* <Text> Slider</Text> */}
+      </View>
+
+      {/* body parts */}
+      <View style={styles.flexOne}>
+        <BodyParts />
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  flexOne: {
+    flex: 1,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: '#ffffff',
