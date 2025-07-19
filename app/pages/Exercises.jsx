@@ -1,7 +1,7 @@
 import React from 'react';
 import { Image, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { heightPercentageToDP as hp } from 'react-native-responsive-screen';
-
+import ImageSlider from '../components/ImageSlider';
 export default function Exercises() {
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -13,6 +13,11 @@ export default function Exercises() {
         <View style={styles.avatarContainer}>
           <Image source={require('../../assets/avatar.png')} style={styles.avatar} />
         </View>
+      </View>
+      {/* image slider */}
+      <View>
+        <ImageSlider/>
+        {/* <Text> Slider</Text> */}
       </View>
     </SafeAreaView>
   );
