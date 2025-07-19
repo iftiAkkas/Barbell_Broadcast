@@ -2,9 +2,9 @@ import { Ionicons } from '@expo/vector-icons'; // or use MaterialIcons, FontAwes
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import React from 'react';
-import Dashboard from '../pages/Dashboard';
-import Exercises from '../pages/Exercises';
-import Profile from '../pages/Profile';
+import Dashboard from './Dashboard';
+import Exercises from './Exercises';
+import Profile from './Profile';
 
 const Tab = createBottomTabNavigator();
 
