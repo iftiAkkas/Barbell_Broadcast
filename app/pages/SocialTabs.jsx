@@ -2,7 +2,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import SocialHome from './SocialHome';
+import SocialHomeScreen from './SocialHome';
 import SocialMessages from './SocialMessages';
 
 const Tab = createBottomTabNavigator();
@@ -23,7 +23,7 @@ export default function SocialTabs() {
         },
       })}
     >
-      <Tab.Screen name="Home" component={SocialHome} />
+      <Tab.Screen name="Home" component={SocialHomeScreen} />
       <Tab.Screen name="Messages" component={SocialMessages} />
     </Tab.Navigator>
   );
