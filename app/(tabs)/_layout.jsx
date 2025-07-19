@@ -16,12 +16,15 @@ export default function Layout() {
             iconName = focused ? 'barbell' : 'barbell-outline';
           } else if (route.name === 'profile') {
             iconName = focused ? 'person' : 'person-outline';
+          } else if (route.name === 'social') {
+            iconName = focused ? 'people' : 'people-outline';
           }
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#00796b',
         tabBarInactiveTintColor: 'gray',
+        tabBarStyle: route.name === 'social' ? { display: 'none' } : undefined,
       })}
     />
   );

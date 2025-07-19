@@ -34,6 +34,7 @@
     "react-native-svg": "^15.12.0",
     "react-native-vector-icons": "^10.2.0",
     "react-native-web": "^0.20.0",
+    "styled-components": "^6.1.19",
     "undefined": "expo-auth-session/providers/google"
   },
   "devDependencies": {
