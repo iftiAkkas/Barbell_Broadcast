@@ -1,7 +1,7 @@
-import React,{useState,useEffect} from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { auth } from '../../firebase/config';
 import ProgressBar from '../components/ProgressBar';
-import {auth} from '../../firebase/config';
 
 export default function Dashboard() {
   const [name, setName] = useState('');
