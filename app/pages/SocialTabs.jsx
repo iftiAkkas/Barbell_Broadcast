@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import SocialHomeScreen from './SocialHome';
 import SocialMessages from './SocialMessages';
+import HomeStack from './SocialHomeStack';
 
 const Tab = createBottomTabNavigator();
 
@@ -23,7 +24,7 @@ export default function SocialTabs() {
         },
       })}
     >
-      <Tab.Screen name="Home" component={SocialHomeScreen} />
+      <Tab.Screen name="Home" component={HomeStack} />
       <Tab.Screen name="Messages" component={SocialMessages} />
     </Tab.Navigator>
   );

@@ -1,7 +1,8 @@
 // HomeScreen.js
-import React, { useState } from 'react';
+import React, { useState, useLayoutEffect  } from 'react';
 import { View, FlatList, SafeAreaView, Alert } from 'react-native';
 import PostCard from '../components/postCard';
+import { useNavigation } from '@react-navigation/native';
 
 const dummyPosts = [
     {
@@ -29,6 +30,15 @@ const dummyPosts = [
 ];
 
 const SocialHomeScreen = () => {
+
+    const navigation = useNavigation();
+
+    useLayoutEffect(() => {
+    navigation.setOptions({
+      headerBackVisible: false, // ✅ this overrides parent back
+    });
+  }, [navigation]);
+
     const [posts, setPosts] = useState(dummyPosts);
 
     const handleDelete = (postId) => {
