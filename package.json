@@ -29,7 +29,10 @@
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.5",
+    "react-native-action-button": "^2.8.5",
+    "react-native-floating-action": "^1.22.0",
     "react-native-gesture-handler": "^2.27.1",
+    "react-native-paper": "^5.14.5",
     "react-native-reanimated": "^3.18.0",
     "react-native-responsive-screen": "^1.4.2",
     "react-native-safe-area-context": "^5.4.0",
@@ -39,7 +42,8 @@
     "react-native-vector-icons": "^10.2.0",
     "react-native-web": "^0.20.0",
     "styled-components": "^6.1.19",
-    "undefined": "expo-auth-session/providers/google"
+    "undefined": "expo-auth-session/providers/google",
+    "expo-image-picker": "~16.1.4"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
