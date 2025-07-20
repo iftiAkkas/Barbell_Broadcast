@@ -1,6 +1,6 @@
-import React from "react";
-import { StyleSheet, Text, View, TouchableOpacity, ImageBackground } from "react-native";
 import { useRouter } from "expo-router";
+import React from "react";
+import { ImageBackground, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function Page() {
   const router = useRouter();
@@ -20,7 +20,7 @@ export default function Page() {
           style={styles.button}
           onPress={() => router.push("/(auth)/login")}
         >
-          <Text style={styles.buttonText}>Login</Text>
+          <Text style={styles.buttonText}>Get Started</Text>
         </TouchableOpacity>
       </View>
     </ImageBackground>
