@@ -14,12 +14,13 @@ import {
   widthPercentageToDP as wp,
 } from 'react-native-responsive-screen';
 import { bodyParts } from '../constants/index';
+
 export default function BodyParts() {
   const router = useRouter();
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Exercises</Text>
-
       <FlatList
         data={bodyParts}
         numColumns={2}
@@ -27,7 +28,9 @@ export default function BodyParts() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
         columnWrapperStyle={styles.columnWrapper}
-        renderItem={({ item }) => <BodyPartCard router={router} item={item} />}
+        renderItem={({ item }) => (
+          <BodyPartCard router={router} item={item} />
+        )}
       />
     </View>
   );
@@ -35,19 +38,23 @@ export default function BodyParts() {
 
 const BodyPartCard = ({ item, router }) => {
   return (
-    <TouchableOpacity style={styles.cardButton} onPress={() => router.push({pathname: '/pages/BodyPartDetailsScreen', params: item})}>
-      <Image
-        source={item.image}
-        resizeMode="cover"
-        style={styles.cardImage}
-      />
+    <TouchableOpacity
+      style={styles.cardButton}
+      onPress={() =>
+        router.push({
+          pathname: '/pages/BodyPartDetailsScreen',
+          params: { name: item.name },
+        })
+      }
+    >
+      <Image source={item.image} resizeMode="cover" style={styles.cardImage} />
       <LinearGradient
         colors={['transparent', 'rgba(0,0,0,0.9)']}
         style={styles.gradientOverlay}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
       />
-      <Text style={styles.cardText}>{item?.name}</Text>
+      <Text style={styles.cardText}>{item.name}</Text>
     </TouchableOpacity>
   );
 };
