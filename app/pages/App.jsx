@@ -5,7 +5,7 @@ import React from 'react';
 import Dashboard from './Dashboard';
 import Exercises from './Exercises';
 import Profile from './Profile';
-//import Social from './Social';
+// import Social from './Social';
 import SocialTabs from './SocialTabs';
 
 const Tab = createBottomTabNavigator();
@@ -19,7 +19,7 @@ export default function App() {
           tabBarIcon: ({ focused, color, size }) => {
             let iconName;
 
-            if (route.name === 'Dashboard') {
+            if (route.name === 'Home') {
               iconName = focused ? 'home' : 'home-outline';
             } else if (route.name === 'Exercises') {
               iconName = focused ? 'barbell' : 'barbell-outline';
