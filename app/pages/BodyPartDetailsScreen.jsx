@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons'; // ✅ Correct import for Expo
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
@@ -6,6 +7,7 @@ import {
     ScrollView,
     StyleSheet,
     Text,
+    TouchableOpacity,
     View,
 } from 'react-native';
 import {
@@ -14,11 +16,12 @@ import {
 } from 'react-native-responsive-screen';
 
 import { fetchExercisesByBodyPart } from '../api/exerciseDB';
-import { bodyParts, demoExercises } from '../constants';
+import ExerciseList from '../components/ExerciseList';
+import { bodyParts } from '../constants';
 
 export default function BodyPartDetailsScreen() {
   const router = useRouter();
-  const [exercises, setExercises] = useState(demoExercises);
+  const [exercises, setExercises] = useState([]);
   const item = useLocalSearchParams();
 
   const selectedImage = bodyParts.find((part) => part.name === item.name)?.image;
@@ -32,6 +35,10 @@ export default function BodyPartDetailsScreen() {
   const getExercisesByBodyPart = async (bodyPart) => {
     try {
       const data = await fetchExercisesByBodyPart(bodyPart);
+        if (!data || data.length === 0) {
+            console.warn(`No exercises found for body part: ${bodyPart}`);
+            return;
+        }
       setExercises(data);
     } catch (error) {
       console.error('Failed to fetch exercises:', error);
@@ -42,14 +49,19 @@ export default function BodyPartDetailsScreen() {
     <ScrollView style={styles.scrollView}>
       <StatusBar style="light" />
       <Image source={selectedImage} style={styles.headerImage} />
-      <View style={styles.content}>
-        <Text style={styles.heading}>Exercises for {item.name}</Text>
-        {exercises.map((exercise, index) => (
-          <View key={index} style={styles.exerciseCard}>
-            <Text style={styles.exerciseName}>{exercise.name}</Text>
-            <Text style={styles.exerciseTarget}>Target: {exercise.target}</Text>
-          </View>
-        ))}
+
+      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <Ionicons name="caret-back-outline" size={hp(4)} color="white" />
+      </TouchableOpacity>
+
+      {/* exercises */}
+      <View style={styles.exerciseTitleWrapper}>
+        <Text style={styles.exerciseTitle}>
+          {item.name} Exercises
+        </Text>
+      </View>
+      <View style={styles.exerciseSpacer}>
+        <ExerciseList data={exercises}/>
       </View>
     </ScrollView>
   );
@@ -64,31 +76,30 @@ const styles = StyleSheet.create({
     width: wp(100),
     height: hp(45),
     resizeMode: 'cover',
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
   },
-  content: {
-    paddingHorizontal: wp(5),
-    paddingTop: hp(2),
+  backButton: {
+    backgroundColor: '#f43f5e', // rose-500
+    position: 'absolute',
+    top: hp(7),
+    left: wp(5),
+    height: hp(5.5),
+    width: hp(5.5),
+    borderRadius: hp(5.5) / 2,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  heading: {
+  exerciseTitleWrapper: {
+    marginHorizontal: wp(4),
+    marginTop: hp(2),
+  },
+  exerciseTitle: {
     fontSize: hp(3),
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: hp(2),
-  },
-  exerciseCard: {
-    backgroundColor: '#f0f0f0',
-    padding: wp(4),
-    borderRadius: 12,
-    marginBottom: hp(2),
-  },
-  exerciseName: {
-    fontSize: hp(2.2),
     fontWeight: '600',
-    color: '#222',
+    color: '#404040',
   },
-  exerciseTarget: {
-    fontSize: hp(1.8),
-    color: '#555',
-    marginTop: 4,
+  exerciseSpacer: {
+    marginBottom: hp(10),
   },
 });
