@@ -5,7 +5,7 @@ import React from 'react';
 import Dashboard from './Dashboard';
 import Exercises from './Exercises';
 import Profile from './Profile';
-//import Social from './Social';
+// import Social from './Social';
 import SocialTabs from './SocialTabs';
 
 const Tab = createBottomTabNavigator();
