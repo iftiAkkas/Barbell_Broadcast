@@ -7,6 +7,9 @@ import { FontAwesome } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import Constants from 'expo-constants';
+import { db } from '../../firebase/config'; // 👈 import Firestore
+import { doc, setDoc } from 'firebase/firestore'; // 👈 import methods
+
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -50,6 +53,16 @@ export default function Signup() {
 
       await updateProfile(user, {
       displayName: firstName,
+    });
+
+    await setDoc(doc(db, 'users', user.uid), {
+      uid: user.uid,
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      birthday: birthday,
+      gender: gender,
+      createdAt: new Date(),
     });
 
       Alert.alert('Account created!');
