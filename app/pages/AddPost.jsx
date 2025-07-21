@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, Alert,TextInput, Button } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  Alert,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { FloatingAction } from 'react-native-floating-action';
 import { db } from '../../firebase/config';
@@ -28,16 +39,19 @@ const uploadImageToCloudinary = async (uri) => {
     type: 'image/jpeg',
     name: `upload_${Date.now()}.jpg`,
   });
-  data.append('upload_preset', 'barbellblabla'); // <-- replace this
-  data.append('cloud_name', 'dumsmhrum'); // <-- replace this
+  data.append('upload_preset', 'barbellblabla'); // your upload preset here
+  data.append('cloud_name', 'dumsmhrum'); // your cloud name here
 
-  const response = await fetch('https://api.cloudinary.com/v1_1/dumsmhrum/image/upload', {
-    method: 'POST',
-    body: data,
-  });
+  const response = await fetch(
+    'https://api.cloudinary.com/v1_1/dumsmhrum/image/upload',
+    {
+      method: 'POST',
+      body: data,
+    }
+  );
 
   const result = await response.json();
-  return result.secure_url; // This is the hosted image URL
+  return result.secure_url;
 };
 
 const AddPost = () => {
@@ -50,7 +64,10 @@ const AddPost = () => {
     if (name === 'camera') {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission denied', 'Camera access is needed to take a photo.');
+        Alert.alert(
+          'Permission denied',
+          'Camera access is needed to take a photo.'
+        );
         return;
       }
 
@@ -64,7 +81,10 @@ const AddPost = () => {
     if (name === 'gallery') {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission denied', 'Gallery access is needed to select a photo.');
+        Alert.alert(
+          'Permission denied',
+          'Gallery access is needed to select a photo.'
+        );
         return;
       }
 
@@ -77,7 +97,6 @@ const AddPost = () => {
 
     if (!result.canceled) {
       const imageUri = result.assets[0].uri;
-      console.log('Image URI:', imageUri);
       setSelectedImage(imageUri);
     }
   };
@@ -93,7 +112,6 @@ const AddPost = () => {
       let imageUrl = '';
       if (selectedImage) {
         imageUrl = await uploadImageToCloudinary(selectedImage);
-
       }
 
       const postObj = {
@@ -115,60 +133,116 @@ const AddPost = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Add Post</Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.keyboardAvoid}
+    >
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Add Post</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="What's on your mind?"
-        multiline
-        value={caption}
-        onChangeText={setCaption}
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="What's on your mind?"
+          multiline
+          value={caption}
+          onChangeText={setCaption}
+          placeholderTextColor="#999"
+          maxLength={300}
+        />
 
-      {selectedImage && (
-        <>
-          <Image source={{ uri: selectedImage }} style={styles.image} />
-        </>
-      )}
+        {selectedImage && (
+          <View style={styles.imageWrapper}>
+            <Image source={{ uri: selectedImage }} style={styles.image} />
+            <TouchableOpacity
+              style={styles.removeImageBtn}
+              onPress={() => setSelectedImage(null)}
+            >
+              <Text style={styles.removeImageText}>Remove</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
-      <Button title="Post" onPress={handlePost} />
+        <TouchableOpacity style={styles.postButton} onPress={handlePost}>
+          <Text style={styles.postButtonText}>Post</Text>
+        </TouchableOpacity>
 
-      <FloatingAction
-        actions={actions}
-        color="#e74c3c"
-        overlayColor="rgba(0, 0, 0, 0.5)"
-        onPressItem={handleAction}
-      />
-    </View>
+        <FloatingAction
+          actions={actions}
+          color="#e74c3c"
+          overlayColor="rgba(0, 0, 0, 0.5)"
+          onPressItem={handleAction}
+          distanceToEdge={{ vertical: 90, horizontal: 20 }}
+        />
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 export default AddPost;
 
 const styles = StyleSheet.create({
-  container: {
+  keyboardAvoid: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingTop: 60,
+  },
+  container: {
+    paddingTop: 40,
     paddingHorizontal: 20,
+    paddingBottom: 270,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
+    fontWeight: '700',
     textAlign: 'center',
-    fontWeight: '600',
+    marginBottom: 30,
+    color: '#333',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 12,
+    padding: 15,
+    fontSize: 16,
+    minHeight: 100,
+    textAlignVertical: 'top',
+    backgroundColor: '#fafafa',
     marginBottom: 20,
+    color: '#333',
+  },
+  imageWrapper: {
+    position: 'relative',
+    marginBottom: 20,
+    borderRadius: 12,
+    overflow: 'hidden',
   },
   image: {
     width: '100%',
-    height: 300,
-    borderRadius: 10,
-    resizeMode: 'cover',
+    height: 250,
+    borderRadius: 12,
   },
-  uriText: {
-    fontSize: 12,
-    color: 'gray',
-    textAlign: 'center',
-    marginTop: 10,
+  removeImageBtn: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(255,0,0,0.7)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+  },
+  removeImageText: {
+    color: 'white',
+    fontWeight: '600',
+  },
+  postButton: {
+    backgroundColor: '#e74c3c',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  postButtonText: {
+    color: 'white',
+    fontWeight: '700',
+    fontSize: 18,
   },
 });
