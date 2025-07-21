@@ -1,74 +1,52 @@
-// HomeScreen.js
-import React, { useState, useLayoutEffect  } from 'react';
-import { View, FlatList, SafeAreaView, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, FlatList, StyleSheet } from 'react-native';
+import { collection, onSnapshot, orderBy, query, deleteDoc, doc } from 'firebase/firestore';
+import { db } from '../../firebase/config'; // adjust path if needed
 import PostCard from '../components/postCard';
-import { useNavigation } from '@react-navigation/native';
-
-const dummyPosts = [
-    {
-        id: '1',
-        userName: 'Jenny Doe',
-        userImg: require('../../assets/chest.png'),
-        postTime: '4 mins ago',
-        post: 'Just testing the social platform UI!',
-        postImg: require('../../assets/chest.png'),
-        liked: true,
-        likes: 14,
-        comments: 5,
-    },
-    {
-        id: '2',
-        userName: 'John Doe',
-        userImg: require('../../assets/back.png'),
-        postTime: '2 hours ago',
-        post: 'Post without an image.',
-        postImg: 'none',
-        liked: false,
-        likes: 8,
-        comments: 0,
-    },
-];
 
 const SocialHomeScreen = () => {
+  const [posts, setPosts] = useState([]);
 
-    const navigation = useNavigation();
-
-    useLayoutEffect(() => {
-    navigation.setOptions({
-      headerBackVisible: false, // ✅ this overrides parent back
+  useEffect(() => {
+    const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const allPosts = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setPosts(allPosts);
     });
-  }, [navigation]);
 
-    const [posts, setPosts] = useState(dummyPosts);
+    return unsubscribe;
+  }, []);
 
-    const handleDelete = (postId) => {
-        Alert.alert('Delete post', 'Are you sure?', [
-            {
-                text: 'Cancel',
-                style: 'cancel',
-            },
-            {
-                text: 'Delete',
-                onPress: () => {
-                    setPosts((prev) => prev.filter((item) => item.id !== postId));
-                },
-            },
-        ]);
-    };
+  const handleDelete = async (id) => {
+    try {
+      await deleteDoc(doc(db, 'posts', id));
+    } catch (err) {
+      console.log('Error deleting post:', err);
+    }
+  };
 
-    return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#f2f2f2' }}>
-            <FlatList
-                data={posts}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item, index }) => (
-                    <PostCard item={item} onDelete={handleDelete} isFirst={index === 0} />
-                )}
-                showsVerticalScrollIndicator={false}
-            />
-
-        </SafeAreaView>
-    );
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={posts}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item, index }) => (
+          <PostCard item={item} onDelete={handleDelete} isFirst={index === 0} />
+        )}
+        showsVerticalScrollIndicator={false}
+      />
+    </View>
+  );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f0f2f5',
+  },
+});
 
 export default SocialHomeScreen;
