@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import { View, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { collection, onSnapshot, orderBy, query, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../../firebase/config'; // adjust path if needed
 import PostCard from '../components/postCard';
 
 const SocialHomeScreen = () => {
   const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);  // Loading state added
 
   useEffect(() => {
     const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
@@ -15,6 +16,10 @@ const SocialHomeScreen = () => {
         ...doc.data(),
       }));
       setPosts(allPosts);
+      setLoading(false);  // Data loaded, stop loading
+    }, (error) => {
+      console.log('Error fetching posts:', error);
+      setLoading(false);  // Even on error, stop loading
     });
 
     return unsubscribe;
@@ -28,13 +33,21 @@ const SocialHomeScreen = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#333" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <FlatList
         data={posts}
         keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => (
-          <PostCard item={item} onDelete={handleDelete} isFirst={index === 0} />
+        renderItem={({ item}) => (
+          <PostCard item={item} onDelete={handleDelete} />
         )}
         showsVerticalScrollIndicator={false}
       />
@@ -46,6 +59,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f0f2f5',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
