@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View, Text, Image, TouchableOpacity, StyleSheet, Modal, Alert, Pressable,
+} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { doc, updateDoc, arrayUnion, arrayRemove, increment } from 'firebase/firestore';
-import { db } from '../../firebase/config';
-import { auth } from '../../firebase/config';
+import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
+import { db, auth } from '../../firebase/config';
 import { formatDistanceToNow } from 'date-fns';
 
 const PostCard = ({ item, onDelete, isFirst }) => {
@@ -11,37 +14,64 @@ const PostCard = ({ item, onDelete, isFirst }) => {
   const userId = user?.uid;
   const isPostOwner = userId === item.userId;
 
-  // Check if user already liked this post
-  const alreadyLiked = item.likedBy?.includes(userId);
-  const [liked, setLiked] = useState(alreadyLiked);
+  const [liked, setLiked] = useState(item.likedBy?.includes(userId));
   const [likeCount, setLikeCount] = useState(item.likeCount || 0);
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     setLiked(item.likedBy?.includes(userId));
-  }, [item.likedBy, userId]);
+  }, [item.likedBy]);
 
   const toggleLike = async () => {
     const postRef = doc(db, 'posts', item.id);
     const newLiked = !liked;
     setLiked(newLiked);
-    setLikeCount(prev => prev + (newLiked ? 1 : -1));
+    setLikeCount((prev) => prev + (newLiked ? 1 : -1));
 
     try {
       await updateDoc(postRef, {
         likeCount: increment(newLiked ? 1 : -1),
-        likedBy: newLiked
-          ? arrayUnion(userId)
-          : arrayRemove(userId),
+        likedBy: newLiked ? arrayUnion(userId) : arrayRemove(userId),
       });
     } catch (error) {
       console.error('Failed to update like:', error);
     }
   };
 
+  const saveImage = async (imageUrl) => {
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'Allow access to save image');
+        return;
+      }
+
+      const fileUri = FileSystem.documentDirectory + imageUrl.split('/').pop();
+      const downloaded = await FileSystem.downloadAsync(imageUrl, fileUri);
+
+      await MediaLibrary.saveToLibraryAsync(downloaded.uri);
+      Alert.alert('Saved', 'Image saved to gallery!');
+    } catch (err) {
+      Alert.alert('Error', 'Failed to save image');
+    }
+  };
+
+  const handleLongPressImage = () => {
+    Alert.alert(
+      'Image Options',
+      'What would you like to do?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Save Image', onPress: () => saveImage(item.imageUrl) },
+      ],
+      { cancelable: true }
+    );
+  };
+
   const userImgSource =
     typeof item.userImg === 'string' && item.userImg.startsWith('http')
       ? { uri: item.userImg }
-      : require('../../assets/back.png'); // fallback image
+      : require('../../assets/back.png');
 
   return (
     <View style={[styles.card, isFirst && styles.firstCard]}>
@@ -54,23 +84,31 @@ const PostCard = ({ item, onDelete, isFirst }) => {
               ? `${formatDistanceToNow(item.createdAt.toDate(), { addSuffix: true })}`
               : 'Just now'}
           </Text>
-
         </View>
       </View>
 
       <Text style={styles.postText}>{item.caption}</Text>
 
       {item.imageUrl && (
-        <Image source={{ uri: item.imageUrl }} style={styles.postImg} />
+        <>
+          <TouchableOpacity
+            onPress={() => setModalVisible(true)}
+            onLongPress={handleLongPressImage}
+          >
+            <Image source={{ uri: item.imageUrl }} style={styles.postImg} />
+          </TouchableOpacity>
+
+          <Modal visible={modalVisible} transparent animationType="fade">
+            <Pressable style={styles.modalContainer} onPress={() => setModalVisible(false)}>
+              <Image source={{ uri: item.imageUrl }} style={styles.fullscreenImg} resizeMode="contain" />
+            </Pressable>
+          </Modal>
+        </>
       )}
 
       <View style={styles.interactionWrapper}>
         <TouchableOpacity style={styles.interaction} onPress={toggleLike}>
-          <Ionicons
-            name={liked ? 'heart' : 'heart-outline'}
-            size={24}
-            color={liked ? 'red' : '#333'}
-          />
+          <Ionicons name={liked ? 'heart' : 'heart-outline'} size={24} color={liked ? 'red' : '#333'} />
           <Text style={styles.interactionText}>{likeCount}</Text>
         </TouchableOpacity>
 
@@ -95,7 +133,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 5,
     elevation: 3,
-    marginTop: 5,
   },
   firstCard: {
     marginTop: 50,
@@ -126,7 +163,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 200,
     borderRadius: 10,
-    marginBottom: 10,
+    marginBottom: 2,
   },
   interactionWrapper: {
     flexDirection: 'row',
@@ -138,8 +175,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   interactionText: {
-    marginLeft: 5,
+    marginLeft: 3,
     fontSize: 13,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullscreenImg: {
+    width: '100%',
+    height: '100%',
   },
 });
 
