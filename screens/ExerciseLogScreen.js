@@ -1,3 +1,5 @@
+// DELETE BUTTONS DONT WORK
+
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -7,44 +9,87 @@ import {
   ScrollView,
   StyleSheet,
   Alert,
+  KeyboardAvoidingView
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { Platform } from 'react-native';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+
 
 export default function ExerciseLogScreen() {
-  const [isEditing, setIsEditing] = useState(true);
   const [routine, setRoutine] = useState(null);
   const [selectedDay, setSelectedDay] = useState(null);
-  const [log, setLog] = useState({});
   const [logDate, setLogDate] = useState(new Date().toISOString().split('T')[0]);
+  const [log, setLog] = useState({});
   const [additionalExercises, setAdditionalExercises] = useState([]);
-  const [allLogs, setAllLogs] = useState({});
+  const [logsForDay, setLogsForDay] = useState([]);
+  const [isEditing, setIsEditing] = useState(true);
+ const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+
+
 
   useEffect(() => {
-    loadRoutine();
-    loadLogs();
-  }, []);
-
-  const loadRoutine = async () => {
-    try {
+    const loadAll = async () => {
       const stored = await AsyncStorage.getItem('routine');
       if (stored) {
-        const parsed = JSON.parse(stored);
-        setRoutine(parsed);
+        setRoutine(JSON.parse(stored));
       }
-    } catch (e) {
-      console.log('Error loading routine:', e);
+    };
+    loadAll();
+  }, []);
+
+  useEffect(() => {
+    if (routine && selectedDay && logDate) {
+      loadLog();
+      loadLogsForDay();
+    }
+  }, [routine, selectedDay, logDate]);
+
+  const loadLog = async () => {
+    const stored = await AsyncStorage.getItem('logs');
+    const all = stored ? JSON.parse(stored) : {};
+    const entry = all[logDate]?.[selectedDay];
+
+    if (entry) {
+      setLog(entry.log || {});
+      setAdditionalExercises(entry.additionalExercises || []);
+      setIsEditing(false);
+    } else {
+      const base = {};
+      (routine?.exercises[selectedDay] || []).forEach((ex) => {
+        base[ex] = [{ reps: '', weight: '' }];
+      });
+      setLog(base);
+      setAdditionalExercises([]);
+      setIsEditing(true);
     }
   };
 
-  const loadLogs = async () => {
-    try {
-      const stored = await AsyncStorage.getItem('logs');
-      if (stored) {
-        setAllLogs(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.log('Error loading logs:', e);
-    }
+  const loadLogsForDay = async () => {
+    const stored = await AsyncStorage.getItem('logs');
+    const all = stored ? JSON.parse(stored) : {};
+    const filtered = Object.entries(all).filter(
+      ([_, val]) => val[selectedDay]
+    );
+    setLogsForDay(filtered);
+  };
+
+  const saveLog = async () => {
+    const stored = await AsyncStorage.getItem('logs');
+    const all = stored ? JSON.parse(stored) : {};
+
+    const todayLog = { log, additionalExercises };
+
+    all[logDate] = {
+      ...(all[logDate] || {}),
+      [selectedDay]: todayLog,
+    };
+
+    await AsyncStorage.setItem('logs', JSON.stringify(all));
+    setIsEditing(false);
+    Alert.alert('Saved', 'Workout saved!');
+    loadLogsForDay();
   };
 
   const updateSet = (exercise, idx, field, value) => {
@@ -58,56 +103,68 @@ export default function ExerciseLogScreen() {
     setLog({ ...log, [exercise]: [...sets, { reps: '', weight: '' }] });
   };
 
-  const addAdditionalSet = (index) => {
-    const updated = [...additionalExercises];
-    updated[index].sets.push({ reps: '', weight: '' });
-    setAdditionalExercises(updated);
+  const addAdditionalSet = (i) => {
+    const temp = [...additionalExercises];
+    temp[i].sets.push({ reps: '', weight: '' });
+    setAdditionalExercises(temp);
   };
 
   const addAdditionalExercise = () => {
     setAdditionalExercises([...additionalExercises, { name: '', sets: [{ reps: '', weight: '' }] }]);
   };
 
-  const saveLog = async () => {
-    try {
-      const todayLog = {
-        log,
-        additionalExercises,
-      };
-
-      const updatedLogs = {
-        ...allLogs,
-        [logDate]: {
-          ...(allLogs[logDate] || {}),
-          [selectedDay]: todayLog,
-        },
-      };
-
-      await AsyncStorage.setItem('logs', JSON.stringify(updatedLogs));
-      setAllLogs(updatedLogs);
-      setIsEditing(false);
-      Alert.alert('Success', 'Workout log saved!');
-    } catch (e) {
-      Alert.alert('Error', 'Failed to save log');
-    }
+  const editLogEntry = (date) => {
+    AsyncStorage.getItem('logs').then((stored) => {
+      const all = stored ? JSON.parse(stored) : {};
+      const entry = all[date]?.[selectedDay];
+      if (entry) {
+        setLogDate(date);
+        setLog(entry.log || {});
+        setAdditionalExercises(entry.additionalExercises || []);
+        setIsEditing(true);
+      }
+    });
   };
 
-  const editLogEntry = (date) => {
-    const entry = allLogs[date]?.[selectedDay];
-    if (entry) {
-      setLogDate(date);
-      setLog(entry.log);
-      setAdditionalExercises(entry.additionalExercises);
-      setIsEditing(true);
-    }
+  const deleteLogEntry = (date) => {
+    Alert.alert(
+      'Delete Log',
+      `Are you sure you want to delete the log for ${date}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const stored = await AsyncStorage.getItem('logs');
+              const all = stored ? JSON.parse(stored) : {};
+
+              if (all[date] && all[date][selectedDay]) {
+                delete all[date][selectedDay];
+                if (Object.keys(all[date]).length === 0) {
+                  delete all[date];
+                }
+
+                await AsyncStorage.setItem('logs', JSON.stringify(all));
+                loadLogsForDay();
+                Alert.alert('Deleted', `Log for ${date} deleted.`);
+              }
+            } catch (e) {
+              Alert.alert('Error', 'Failed to delete log.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   if (!routine) return null;
 
   const { selectedDays, dayTitles, exercises } = routine;
-  const logsForDay = Object.entries(allLogs).filter(([, val]) => val[selectedDay]);
 
   return (
+    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Select a Day</Text>
       <View style={styles.daysContainer}>
@@ -123,111 +180,97 @@ export default function ExerciseLogScreen() {
       </View>
 
       {selectedDay && (
-  <>
-    {[...logsForDay]
-      .sort((a, b) => new Date(a[0]) - new Date(b[0])) // or flip to b[0]-a[0] for reverse
-      .map(([date, val]) => {
-        const entry = val[selectedDay];
-        return (
-          <View key={date} style={styles.logGroup}>
-            <Text style={styles.logDate}>{date}</Text>
-            {Object.entries(entry.log).map(([exName, sets], i) => (
-              <View key={i} style={styles.exerciseBlock}>
-                <Text style={styles.exerciseTitle}>{exName}</Text>
-                {sets.map((s, idx) => (
-                  <Text key={idx} style={styles.readOnlyText}>
-                    Set {idx + 1}: {s.reps} reps × {s.weight} kg
-                  </Text>
-                ))}
-              </View>
-            ))}
-            {entry.additionalExercises.map((ae, i) => (
-              <View key={i} style={styles.exerciseBlock}>
-                <Text style={styles.exerciseTitle}>{ae.name}</Text>
-                {ae.sets.map((s, idx) => (
-                  <Text key={idx} style={styles.readOnlyText}>
-                    Set {idx + 1}: {s.reps} reps × {s.weight} kg
-                  </Text>
-                ))}
-              </View>
-            ))}
-            <TouchableOpacity style={styles.editBtn} onPress={() => editLogEntry(date)}>
-              <Text style={styles.editText}>Edit</Text>
-            </TouchableOpacity>
-          </View>
-        );
-      })}
+        <>
 
-          {!isEditing && (
-            <TouchableOpacity
-              style={styles.newLogBtn}
-              onPress={() => {
-                const emptyLog = {};
-                (exercises[selectedDay] || []).forEach((ex) => {
-                  emptyLog[ex] = [{ reps: '', weight: '' }];
-                });
-                setLog(emptyLog);
-                setAdditionalExercises([]);
-                setLogDate(new Date().toISOString().split('T')[0]);
-                setIsEditing(true);
-              }}
-            >
-              <Text style={styles.newLogText}>Add Today's Workout</Text>
-            </TouchableOpacity>
-          )}
+        {/* Date Picker */}
+  <View style={{ marginBottom: 10, alignItems: 'center' }}>
+  <TouchableOpacity
+    onPress={() => setDatePickerVisibility(true)}
+    style={{
+      backgroundColor: '#ddd',
+      paddingVertical: 8,
+      paddingHorizontal: 20,
+      borderRadius: 6,
+    }}
+  >
+    <Text style={styles.dateText}>Log Date: {logDate}</Text>
+  </TouchableOpacity>
 
-          {isEditing && (
-            <>
-              <TextInput
-                style={styles.input}
-                placeholder="YYYY-MM-DD"
-                value={logDate}
-                onChangeText={setLogDate}
-              />
-              <Text style={styles.title}>Today's Exercises</Text>
-              {exercises[selectedDay]?.map((exercise) => (
-                <View key={exercise} style={styles.exerciseBlock}>
-                  <Text style={styles.exerciseTitle}>{exercise}</Text>
-                  {(log[exercise] || []).map((set, idx) => (
-                    <View key={idx} style={styles.setRow}>
+  <DateTimePickerModal
+    isVisible={isDatePickerVisible}
+    mode="date"
+    date={new Date(logDate)}
+    onConfirm={(selectedDate) => {
+      const newDate = selectedDate.toISOString().split('T')[0];
+      setLogDate(newDate);
+      setDatePickerVisibility(false);
+    }}
+    onCancel={() => setDatePickerVisibility(false)}
+  />
+</View>
+
+
+
+          <Text style={styles.subtitle}>Exercises</Text>
+          {Object.entries(log).map(([ex, sets], i) => (
+            <View key={i} style={styles.exerciseBlock}>
+              <Text style={styles.exerciseTitle}>{ex}</Text>
+              {sets.map((s, idx) => (
+                <View key={idx} style={styles.setRow}>
+                  {isEditing ? (
+                    <>
                       <TextInput
+                        value={s.reps}
                         placeholder="Reps"
-                        value={set.reps}
-                        onChangeText={(text) => updateSet(exercise, idx, 'reps', text)}
+                        onChangeText={(t) => updateSet(ex, idx, 'reps', t)}
                         style={styles.input}
                       />
                       <TextInput
+                        value={s.weight}
                         placeholder="Weight"
-                        value={set.weight}
-                        onChangeText={(text) => updateSet(exercise, idx, 'weight', text)}
+                        onChangeText={(t) => updateSet(ex, idx, 'weight', t)}
                         style={styles.input}
                       />
-                    </View>
-                  ))}
-                  <TouchableOpacity onPress={() => addSet(exercise)}>
-                    <Text style={styles.addText}>+ Add Set</Text>
-                  </TouchableOpacity>
+                    </>
+                  ) : (
+                    <Text style={styles.readOnlyText}>
+                      Set {idx + 1}: {s.reps} reps × {s.weight} kg
+                    </Text>
+                  )}
                 </View>
               ))}
+              {isEditing && (
+                <TouchableOpacity onPress={() => addSet(ex)}>
+                  <Text style={styles.addText}>+ Add Set</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ))}
 
-              <Text style={styles.subtitle}>Additional Exercises</Text>
-              {additionalExercises.map((ex, i) => (
-                <View key={i} style={styles.exerciseBlock}>
-                  <TextInput
-                    placeholder="Exercise Name"
-                    value={ex.name}
-                    onChangeText={(text) => {
-                      const updated = [...additionalExercises];
-                      updated[i].name = text;
-                      setAdditionalExercises(updated);
-                    }}
-                    style={styles.input}
-                  />
-                  {ex.sets.map((set, idx) => (
-                    <View key={idx} style={styles.setRow}>
+          <Text style={styles.subtitle}>Additional Exercises</Text>
+          {additionalExercises.map((ae, i) => (
+            <View key={i} style={styles.exerciseBlock}>
+              {isEditing ? (
+                <TextInput
+                  placeholder="Exercise Name"
+                  value={ae.name}
+                  onChangeText={(text) => {
+                    const updated = [...additionalExercises];
+                    updated[i].name = text;
+                    setAdditionalExercises(updated);
+                  }}
+                  style={styles.input}
+                />
+              ) : (
+                <Text style={styles.exerciseTitle}>{ae.name}</Text>
+              )}
+              {ae.sets.map((set, idx) => (
+                <View key={idx} style={styles.setRow}>
+                  {isEditing ? (
+                    <>
                       <TextInput
-                        placeholder="Reps"
                         value={set.reps}
+                        placeholder="Reps"
                         onChangeText={(text) => {
                           const updated = [...additionalExercises];
                           updated[i].sets[idx].reps = text;
@@ -236,8 +279,8 @@ export default function ExerciseLogScreen() {
                         style={styles.input}
                       />
                       <TextInput
-                        placeholder="Weight"
                         value={set.weight}
+                        placeholder="Weight"
                         onChangeText={(text) => {
                           const updated = [...additionalExercises];
                           updated[i].sets[idx].weight = text;
@@ -245,24 +288,92 @@ export default function ExerciseLogScreen() {
                         }}
                         style={styles.input}
                       />
-                    </View>
-                  ))}
-                  <TouchableOpacity onPress={() => addAdditionalSet(i)}>
-                    <Text style={styles.addText}>+ Add Set</Text>
-                  </TouchableOpacity>
+                    </>
+                  ) : (
+                    <Text style={styles.readOnlyText}>
+                      Set {idx + 1}: {set.reps} reps × {set.weight} kg
+                    </Text>
+                  )}
                 </View>
               ))}
-              <TouchableOpacity onPress={addAdditionalExercise}>
-                <Text style={styles.addText}>+ Add Additional Exercise</Text>
+              {isEditing && (
+                <TouchableOpacity onPress={() => addAdditionalSet(i)}>
+                  <Text style={styles.addText}>+ Add Set</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ))}
+
+          {isEditing && (
+            <TouchableOpacity onPress={addAdditionalExercise}>
+              <Text style={styles.addText}>+ Add Additional Exercise</Text>
+            </TouchableOpacity>
+          )}
+
+          {isEditing ? (
+            <TouchableOpacity style={styles.saveBtn} onPress={saveLog}>
+              <Text style={styles.saveText}>Save Workout</Text>
+            </TouchableOpacity>
+          ) : (
+            <>
+              <TouchableOpacity style={styles.editBtn} onPress={() => setIsEditing(true)}>
+                <Text style={styles.editText}>Edit</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.saveBtn} onPress={saveLog}>
-                <Text style={styles.saveText}>Save Workout</Text>
+              <TouchableOpacity
+                style={styles.newLogBtn}
+                onPress={() => {
+                  const emptyLog = {};
+                  (exercises[selectedDay] || []).forEach((ex) => {
+                    emptyLog[ex] = [{ reps: '', weight: '' }];
+                  });
+                  setLog(emptyLog);
+                  setAdditionalExercises([]);
+                  setIsEditing(true);
+                }}
+              >
+                <Text style={styles.newLogText}>Add Today’s Workout</Text>
               </TouchableOpacity>
             </>
           )}
+
+          <Text style={styles.subtitle}>Previous Logs</Text>
+          {logsForDay.sort((a, b) => new Date(b[0]) - new Date(a[0]))
+
+  .map(([date, entry], i) => {
+            const val = entry[selectedDay];
+            if (!val) return null;
+
+            return (
+              <View key={i} style={styles.exerciseBlock}>
+                <Text style={styles.logDate}>{date}</Text>
+
+                {Object.entries(val.log || {}).map(([ex, sets], j) => (
+                  <Text key={j} style={styles.readOnlyText}>
+                    {ex}: {sets.map((s, si) => `Set ${si + 1}: ${s.reps}x${s.weight}`).join(', ')}
+                  </Text>
+                ))}
+
+                {(val.additionalExercises || []).map((ae, j) => (
+                  <Text key={`ae-${j}`} style={styles.readOnlyText}>
+                    {ae.name}: {ae.sets.map((s, si) => `Set ${si + 1}: ${s.reps}x${s.weight}`).join(', ')}
+                  </Text>
+                ))}
+
+                <View style={{ flexDirection: 'row', marginTop: 8 }}>
+                  <TouchableOpacity style={styles.editBtnSmall} onPress={() => editLogEntry(date)}>
+                    <Text style={styles.editText}>Edit</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.deleteBtnSmall} onPress={() => deleteLogEntry(date)}>
+                    <Text style={styles.deleteText}>Delete</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            );
+          })}
         </>
       )}
     </ScrollView>
+      </KeyboardAvoidingView>
   );
 }
 
@@ -303,41 +414,48 @@ const styles = StyleSheet.create({
   saveText: { color: '#fff', fontWeight: 'bold' },
   editBtn: {
     backgroundColor: '#007bff',
-    padding: 8,
-    borderRadius: 6,
-    alignItems: 'center',
-    marginVertical: 10,
-    width: 100,
-    alignSelf: 'flex-start',
-  },
-  editText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  readOnlyText: {
-    fontSize: 16,
-    marginVertical: 4,
-  },
-  newLogBtn: {
-    backgroundColor: '#6c63ff',
     padding: 12,
     borderRadius: 6,
     alignItems: 'center',
-    marginVertical: 10,
+    marginVertical: 20,
+  },
+  editBtnSmall: {
+    backgroundColor: '#007bff',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 4,
+    marginRight: 10,
+  },
+  deleteBtnSmall: {
+    backgroundColor: '#dc3545',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 4,
+  },
+  editText: { color: '#fff', fontWeight: 'bold' },
+  deleteText: { color: '#fff', fontWeight: 'bold' },
+  readOnlyText: { fontSize: 16, marginVertical: 4 },
+  newLogBtn: {
+    backgroundColor: '#6c757d',
+    padding: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+    marginBottom: 20,
   },
   newLogText: {
     color: '#fff',
     fontWeight: 'bold',
   },
-  logGroup: {
-    backgroundColor: '#fff',
-    padding: 10,
-    marginBottom: 12,
-    borderRadius: 6,
-  },
   logDate: {
     fontWeight: 'bold',
-    fontSize: 16,
-    marginBottom: 6,
+    marginTop: 10,
+    marginBottom: 5,
   },
+dateText: {
+  fontSize: 16,
+  color: '#000',
+  fontWeight: '600',
+},
+
+
 });

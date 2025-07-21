@@ -1,96 +1,117 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, StyleSheet, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  KeyboardAvoidingView
+} from 'react-native';
 
-const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export default function RoutineScreen() {
+  const [creating, setCreating] = useState(false);
   const [routineTitle, setRoutineTitle] = useState('');
-  const [routines, setRoutines] = useState([]);
-  const [isEditing, setIsEditing] = useState(true);
-
   const [selectedDays, setSelectedDays] = useState([]);
-  const [exercises, setExercises] = useState({});
-  const [dayTitles, setDayTitles] = useState({});
-  const [daySets, setDaySets] = useState({});
-  const [dayReps, setDayReps] = useState({});
+  const [routine, setRoutine] = useState(null);
+  const [dayData, setDayData] = useState({});
 
   useEffect(() => {
-    const loadRoutines = async () => {
-      const stored = await AsyncStorage.getItem('routines');
-      if (stored) setRoutines(JSON.parse(stored));
+    const loadRoutine = async () => {
+      try {
+        const saved = await AsyncStorage.getItem('routine');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setRoutine(parsed);
+          setRoutineTitle(parsed.title);
+        }
+      } catch (e) {
+        console.error('❌ Failed to load routine:', e);
+      }
     };
-    loadRoutines();
+    loadRoutine();
   }, []);
-
-  const saveRoutine = async () => {
-    try {
-      const newRoutine = {
-        title: routineTitle || `Routine ${routines.length + 1}`,
-        selectedDays,
-        exercises,
-        dayTitles,
-        daySets,
-        dayReps,
-      };
-
-      const existing = await AsyncStorage.getItem('routines');
-      const parsed = existing ? JSON.parse(existing) : [];
-
-      const updatedRoutines = [...parsed, newRoutine];
-      await AsyncStorage.setItem('routines', JSON.stringify(updatedRoutines));
-
-      setRoutines(updatedRoutines);
-      setIsEditing(false);
-      Alert.alert('Success', 'Routine saved!');
-    } catch (e) {
-      Alert.alert('Error', 'Failed to save routine');
-    }
-  };
 
   const toggleDay = (day) => {
     if (selectedDays.includes(day)) {
       setSelectedDays(selectedDays.filter(d => d !== day));
-      const newExercises = { ...exercises };
-      const newTitles = { ...dayTitles };
-      const newSets = { ...daySets };
-      const newReps = { ...dayReps };
-      delete newExercises[day];
-      delete newTitles[day];
-      delete newSets[day];
-      delete newReps[day];
-
-      setExercises(newExercises);
-      setDayTitles(newTitles);
-      setDaySets(newSets);
-      setDayReps(newReps);
+      const updated = { ...dayData };
+      delete updated[day];
+      setDayData(updated);
     } else {
       setSelectedDays([...selectedDays, day]);
-      setExercises({ ...exercises, [day]: [] });
-      setDayTitles({ ...dayTitles, [day]: '' });
-      setDaySets({ ...daySets, [day]: '' });
-      setDayReps({ ...dayReps, [day]: '' });
+      setDayData({
+        ...dayData,
+        [day]: { title: '', exercises: [''], sets: [''], reps: [''] }
+      });
     }
   };
 
+const handleSave = async () => {
+  const finalRoutine = {
+    title: routineTitle,
+    selectedDays,
+    dayTitles: {},
+    exercises: {},
+    sets: {},
+    reps: {},
+  };
+
+  selectedDays.forEach((day) => {
+    finalRoutine.dayTitles[day] = dayData[day].title;
+
+    const cleanExercises = dayData[day].exercises
+      .map((ex, i) => ({
+        ex,
+        sets: dayData[day].sets[i],
+        reps: dayData[day].reps[i],
+      }))
+      .filter(item => item.ex.trim() !== '');
+
+    finalRoutine.exercises[day] = cleanExercises.map(e => e.ex);
+    finalRoutine.sets[day] = cleanExercises.map(e => e.sets);
+    finalRoutine.reps[day] = cleanExercises.map(e => e.reps);
+  });
+
+  try {
+    await AsyncStorage.setItem('routine', JSON.stringify(finalRoutine));
+    setRoutine(finalRoutine);
+    setCreating(false);
+  } catch (e) {
+    console.error('❌ Failed to save routine:', e);
+  }
+};
+
+
+
+
   return (
+    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
     <ScrollView contentContainerStyle={styles.container}>
-      {isEditing ? (
+      {!creating && !routine && (
+        <TouchableOpacity style={styles.createBtn} onPress={() => setCreating(true)}>
+          <Text style={styles.btnText}>Create A Routine</Text>
+        </TouchableOpacity>
+      )}
+
+      {creating && (
         <>
-          <Text style={styles.label}>Routine Title</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter routine title"
+            placeholder="Routine Title"
             value={routineTitle}
             onChangeText={setRoutineTitle}
           />
 
-          <Text style={styles.title}>Select Workout Days</Text>
+          <Text style={styles.title}>Select Workout Days (Weekly)</Text>
           <View style={styles.daysContainer}>
             {daysOfWeek.map(day => (
               <TouchableOpacity
                 key={day}
-                style={[styles.dayButton, selectedDays.includes(day) && styles.daySelected]}
+                style={[styles.dayBtn, selectedDays.includes(day) && styles.selected]}
                 onPress={() => toggleDay(day)}
               >
                 <Text>{day}</Text>
@@ -99,200 +120,204 @@ export default function RoutineScreen() {
           </View>
 
           {selectedDays.map(day => (
-            <View key={day} style={styles.daySection}>
-              <Text style={styles.dayTitle}>{day} Exercises</Text>
-
+            <View key={day} style={styles.dayBlock}>
+              <Text style={styles.subtitle}>{day}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Custom title (e.g., Chest Day)"
-                value={dayTitles[day] || ''}
-                onChangeText={(text) => setDayTitles({ ...dayTitles, [day]: text })}
+                placeholder="Day Title (e.g. Push Day)"
+                value={dayData[day].title}
+                onChangeText={text =>
+                  setDayData({ ...dayData, [day]: { ...dayData[day], title: text } })
+                }
               />
 
-              {exercises[day]?.map((ex, i) => (
-                <View key={i} style={{ marginBottom: 12 }}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder={`Exercise ${i + 1}`}
-                    value={ex}
-                    onChangeText={(text) => {
-                      const updated = [...exercises[day]];
-                      updated[i] = text;
-                      setExercises({ ...exercises, [day]: updated });
-                    }}
-                  />
+              {dayData[day].exercises.map((_, idx) => (
+  <View key={idx} style={{ flexDirection: 'row', alignItems: 'center' }}>
+    <View style={{ flex: 1 }}>
+      <TextInput
+        style={styles.input}
+        placeholder={`Exercise ${idx + 1}`}
+        value={dayData[day].exercises[idx]}
+        onChangeText={text => {
+          const updated = [...dayData[day].exercises];
+          updated[idx] = text;
+          setDayData({ ...dayData, [day]: { ...dayData[day], exercises: updated } });
+        }}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Sets"
+        keyboardType="numeric"
+        value={dayData[day].sets[idx]}
+        onChangeText={text => {
+          const updated = [...dayData[day].sets];
+          updated[idx] = text;
+          setDayData({ ...dayData, [day]: { ...dayData[day], sets: updated } });
+        }}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Reps"
+        value={dayData[day].reps[idx]}
+        onChangeText={text => {
+          const updated = [...dayData[day].reps];
+          updated[idx] = text;
+          setDayData({ ...dayData, [day]: { ...dayData[day], reps: updated } });
+        }}
+      />
+    </View>
 
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Target Sets"
-                    keyboardType="numeric"
-                    value={daySets[day]?.[i] || ''}
-                    onChangeText={(text) => {
-                      const updated = [...(daySets[day] || [])];
-                      updated[i] = text;
-                      setDaySets({ ...daySets, [day]: updated });
-                    }}
-                  />
-
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Rep Range (e.g. 8-10)"
-                    value={dayReps[day]?.[i] || ''}
-                    onChangeText={(text) => {
-                      const updated = [...(dayReps[day] || [])];
-                      updated[i] = text;
-                      setDayReps({ ...dayReps, [day]: updated });
-                    }}
-                  />
-                </View>
-              ))}
+    {dayData[day].exercises.length > 1 && (
+      <TouchableOpacity
+        onPress={() => {
+          const newEx = [...dayData[day].exercises];
+          const newSets = [...dayData[day].sets];
+          const newReps = [...dayData[day].reps];
+          newEx.splice(idx, 1);
+          newSets.splice(idx, 1);
+          newReps.splice(idx, 1);
+          setDayData({
+            ...dayData,
+            [day]: {
+              ...dayData[day],
+              exercises: newEx,
+              sets: newSets,
+              reps: newReps,
+            },
+          });
+        }}
+        style={styles.deleteBtnSmall}
+      >
+        <Text style={styles.deleteText}>❌</Text>
+      </TouchableOpacity>
+    )}
+  </View>
+))}
 
               <TouchableOpacity
-                style={styles.addBtn}
                 onPress={() => {
-                  setExercises({ ...exercises, [day]: [...(exercises[day] || []), ''] });
-                  setDaySets({ ...daySets, [day]: [...(daySets[day] || []), ''] });
-                  setDayReps({ ...dayReps, [day]: [...(dayReps[day] || []), ''] });
+                  setDayData({
+                    ...dayData,
+                    [day]: {
+                      ...dayData[day],
+                      exercises: [...dayData[day].exercises, ''],
+                      sets: [...dayData[day].sets, ''],
+                      reps: [...dayData[day].reps, ''],
+                    },
+                  });
                 }}
               >
-                <Text style={styles.addText}>+ Add Exercise</Text>
+                <Text style={styles.addMore}>+ Add Exercise</Text>
               </TouchableOpacity>
             </View>
           ))}
 
-          <TouchableOpacity style={styles.saveBtn} onPress={saveRoutine}>
-            <Text style={styles.saveText}>Save Routine</Text>
+          <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
+            <Text style={styles.btnText}>Save Routine</Text>
           </TouchableOpacity>
         </>
-      ) : (
-        <>
-          <Text style={styles.title}>Saved Routine: {routineTitle}</Text>
-         {!isEditing ? (
-  <View>
-    <Text style={styles.savedTitle}>Saved Routine: {routineTitle}</Text>
+      )}
 
-    {selectedDays.map(day => (
-      <View key={day} style={styles.daySection}>
-        <Text style={styles.dayTitle}>
-          {dayTitles[day] || day}
-        </Text>
+      {routine && !creating && (
+  <>
+    <Text style={styles.title}>Saved Routine: {routine.title}</Text>
+   {routine?.selectedDays?.map((day, i) => (
+  <View key={i} style={styles.dayBlock}>
+    <Text style={styles.subtitle}>
+      {day} - {routine.dayTitles?.[day] || ''}
+    </Text>
 
-        {(exercises[day] || []).map((exercise, i) => (
-          <View key={i} style={{ marginBottom: 8 }}>
-            <Text style={styles.exerciseText}>
-              {exercise}
-            </Text>
-            <Text style={styles.setRepText}>
-              Sets: {daySets[day]?.[i] || '-'}, Reps: {dayReps[day]?.[i] || '-'}
-            </Text>
-          </View>
-        ))}
-      </View>
+    {(routine.exercises?.[day] || []).map((ex, j) => (
+      <Text key={j} style={styles.exerciseLine}>
+        • {ex} ({routine.sets?.[day]?.[j] || '0'} sets × {routine.reps?.[day]?.[j] || '0'} reps)
+      </Text>
     ))}
+  </View>
+))}
 
-    <TouchableOpacity style={styles.editBtn} onPress={() => setIsEditing(true)}>
-      <Text style={styles.editText}>Edit Routine</Text>
-    </TouchableOpacity>
 
     <TouchableOpacity
-      style={styles.newBtn}
+      style={styles.editBtn}
       onPress={() => {
-        setRoutineTitle('');
-        setSelectedDays([]);
-        setExercises({});
-        setDayTitles({});
-        setDaySets({});
-        setDayReps({});
-        setIsEditing(true);
+        setCreating(true);
+        setRoutineTitle(routine.title);
+        setSelectedDays(routine.selectedDays);
+
+        // Reconstruct dayData format
+        const newDayData = {};
+        routine.selectedDays.forEach(day => {
+          newDayData[day] = {
+            title: routine.dayTitles[day],
+            exercises: routine.exercises[day],
+            sets: [],
+            reps: [],
+          };
+        });
+        setDayData(newDayData);
       }}
     >
-      <Text style={styles.newText}>Add New Routine</Text>
+      <Text style={styles.btnText}>Edit Routine</Text>
     </TouchableOpacity>
-  </View>
-) : (
-  <>
-    {/* your input form already here */}
   </>
 )}
 
-        </>
-      )}
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { padding: 16 },
-  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
-  daysContainer: { flexDirection: 'row', flexWrap: 'wrap' },
-  dayButton: {
-    padding: 10,
-    margin: 5,
-    borderWidth: 1,
-    borderRadius: 6,
-    backgroundColor: '#f0f0f0',
-  },
-  daySelected: { backgroundColor: '#a0e1e5' },
-  daySection: { marginTop: 20 },
-  dayTitle: { fontSize: 16, fontWeight: '600' },
   input: {
     borderWidth: 1,
-    marginVertical: 4,
     padding: 8,
     borderRadius: 5,
+    marginVertical: 6,
     backgroundColor: '#fff',
   },
-  addBtn: { marginVertical: 6 },
-  addText: { color: '#007bff' },
+  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
+  subtitle: { fontSize: 16, fontWeight: '600', marginTop: 10 },
+  dayBlock: { marginVertical: 10, padding: 10, backgroundColor: '#f5f5f5', borderRadius: 6 },
+  daysContainer: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 10 },
+  dayBtn: {
+    borderWidth: 1,
+    padding: 8,
+    margin: 4,
+    borderRadius: 6,
+    backgroundColor: '#ddd',
+  },
+  selected: { backgroundColor: '#a0e1e5' },
+  addMore: { color: '#007bff', marginTop: 6 },
+  createBtn: {
+    backgroundColor: '#007bff',
+    padding: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
   saveBtn: {
     backgroundColor: '#28a745',
     padding: 12,
     borderRadius: 6,
     alignItems: 'center',
-    marginVertical: 20,
-  },
-  saveText: { color: '#fff', fontWeight: 'bold' },
-  label: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginBottom: 6,
+    marginTop: 20,
   },
   editBtn: {
-    backgroundColor: '#007bff',
-    padding: 10,
+    backgroundColor: '#ffc107',
+    padding: 12,
     borderRadius: 6,
     alignItems: 'center',
+    marginTop: 20,
   },
-  editText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
+  btnText: { color: '#fff', fontWeight: 'bold' },
+  exerciseLine: { marginTop: 4 },
 
-  savedTitle: {
-  fontSize: 18,
-  fontWeight: 'bold',
-  marginBottom: 12,
+  deleteBtnSmall: {
+  marginLeft: 10,
+  backgroundColor: '#dc3545',
+  padding: 8,
+  borderRadius: 5,
 },
-
-exerciseText: {
-  fontSize: 16,
-  fontWeight: '600',
-},
-
-setRepText: {
-  fontSize: 14,
-  color: '#555',
-},
-
-newBtn: {
-  backgroundColor: '#6c63ff',
-  padding: 12,
-  borderRadius: 6,
-  alignItems: 'center',
-  marginTop: 12,
-},
-
-newText: {
+deleteText: {
   color: '#fff',
   fontWeight: 'bold',
 },
