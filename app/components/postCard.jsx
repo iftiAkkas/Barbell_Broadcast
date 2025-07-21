@@ -3,34 +3,42 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const PostCard = ({ item, onDelete, isFirst }) => {
-  const likeIcon = item.liked ? 'heart' : 'heart-outline';
-  const likeColor = item.liked ? '#e91e63' : '#333';
+  const likeIcon = 'heart-outline';
+  const likeColor = '#333';
+
+  // ✅ Validate userImg (must be string URL) or fallback to local image
+  const userImgSource =
+    typeof item.userImg === 'string' && item.userImg.startsWith('http')
+      ? { uri: item.userImg }
+      : require('../../assets/back.png'); // adjust path if needed
 
   return (
     <View style={[styles.card, isFirst && styles.firstCard]}>
       <View style={styles.userInfo}>
-        <Image source={item.userImg} style={styles.userImg} />
+        <Image source={userImgSource} style={styles.userImg} />
         <View>
           <Text style={styles.userName}>{item.userName}</Text>
-          <Text style={styles.postTime}>{item.postTime}</Text>
+          <Text style={styles.postTime}>
+            {item.createdAt?.toDate?.().toLocaleString() ?? 'Just now'}
+          </Text>
         </View>
       </View>
 
-      <Text style={styles.postText}>{item.post}</Text>
+      <Text style={styles.postText}>{item.caption}</Text>
 
-      {item.postImg && item.postImg !== 'none' && (
-        <Image source={item.postImg} style={styles.postImg} />
+      {item.imageUrl && (
+        <Image source={{ uri: item.imageUrl }} style={styles.postImg} />
       )}
 
       <View style={styles.interactionWrapper}>
         <TouchableOpacity style={styles.interaction}>
           <Ionicons name={likeIcon} size={20} color={likeColor} />
-          <Text style={styles.interactionText}>{item.likes} Likes</Text>
+          <Text style={styles.interactionText}>Like</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.interaction}>
           <Ionicons name="chatbubble-outline" size={20} color="#333" />
-          <Text style={styles.interactionText}>{item.comments} Comments</Text>
+          <Text style={styles.interactionText}>Comment</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.interaction} onPress={() => onDelete(item.id)}>
@@ -52,11 +60,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 5,
     elevation: 3,
-    marginTop: 5, 
-     // Default no top margin, overridden if first card
+    marginTop: 5,
   },
   firstCard: {
-    marginTop: 50, // Only first card has this marginTop
+    marginTop: 50,
   },
   userInfo: {
     flexDirection: 'row',
