@@ -120,6 +120,8 @@ const AddPost = () => {
         caption,
         imageUrl,
         createdAt: serverTimestamp(),
+        likeCount: 0,
+        likedBy: [],
       };
 
       await addDoc(collection(db, 'posts'), postObj);

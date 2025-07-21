@@ -1,16 +1,47 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { doc, updateDoc, arrayUnion, arrayRemove, increment } from 'firebase/firestore';
+import { db } from '../../firebase/config';
+import { auth } from '../../firebase/config';
+import { formatDistanceToNow } from 'date-fns';
 
 const PostCard = ({ item, onDelete, isFirst }) => {
-  const likeIcon = 'heart-outline';
-  const likeColor = '#333';
+  const user = auth.currentUser;
+  const userId = user?.uid;
+  const isPostOwner = userId === item.userId;
 
-  // ✅ Validate userImg (must be string URL) or fallback to local image
+  // Check if user already liked this post
+  const alreadyLiked = item.likedBy?.includes(userId);
+  const [liked, setLiked] = useState(alreadyLiked);
+  const [likeCount, setLikeCount] = useState(item.likeCount || 0);
+
+  useEffect(() => {
+    setLiked(item.likedBy?.includes(userId));
+  }, [item.likedBy, userId]);
+
+  const toggleLike = async () => {
+    const postRef = doc(db, 'posts', item.id);
+    const newLiked = !liked;
+    setLiked(newLiked);
+    setLikeCount(prev => prev + (newLiked ? 1 : -1));
+
+    try {
+      await updateDoc(postRef, {
+        likeCount: increment(newLiked ? 1 : -1),
+        likedBy: newLiked
+          ? arrayUnion(userId)
+          : arrayRemove(userId),
+      });
+    } catch (error) {
+      console.error('Failed to update like:', error);
+    }
+  };
+
   const userImgSource =
     typeof item.userImg === 'string' && item.userImg.startsWith('http')
       ? { uri: item.userImg }
-      : require('../../assets/back.png'); // adjust path if needed
+      : require('../../assets/back.png'); // fallback image
 
   return (
     <View style={[styles.card, isFirst && styles.firstCard]}>
@@ -19,8 +50,11 @@ const PostCard = ({ item, onDelete, isFirst }) => {
         <View>
           <Text style={styles.userName}>{item.userName}</Text>
           <Text style={styles.postTime}>
-            {item.createdAt?.toDate?.().toLocaleString() ?? 'Just now'}
+            {item.createdAt?.toDate
+              ? `${formatDistanceToNow(item.createdAt.toDate(), { addSuffix: true })}`
+              : 'Just now'}
           </Text>
+
         </View>
       </View>
 
@@ -31,19 +65,20 @@ const PostCard = ({ item, onDelete, isFirst }) => {
       )}
 
       <View style={styles.interactionWrapper}>
-        <TouchableOpacity style={styles.interaction}>
-          <Ionicons name={likeIcon} size={20} color={likeColor} />
-          <Text style={styles.interactionText}>Like</Text>
+        <TouchableOpacity style={styles.interaction} onPress={toggleLike}>
+          <Ionicons
+            name={liked ? 'heart' : 'heart-outline'}
+            size={24}
+            color={liked ? 'red' : '#333'}
+          />
+          <Text style={styles.interactionText}>{likeCount}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.interaction}>
-          <Ionicons name="chatbubble-outline" size={20} color="#333" />
-          <Text style={styles.interactionText}>Comment</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.interaction} onPress={() => onDelete(item.id)}>
-          <Ionicons name="trash" size={20} color="#333" />
-        </TouchableOpacity>
+        {isPostOwner && (
+          <TouchableOpacity style={styles.interaction} onPress={() => onDelete(item.id)}>
+            <Ionicons name="trash" size={24} color="#333" />
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -95,7 +130,8 @@ const styles = StyleSheet.create({
   },
   interactionWrapper: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
+    marginTop: 10,
   },
   interaction: {
     flexDirection: 'row',
