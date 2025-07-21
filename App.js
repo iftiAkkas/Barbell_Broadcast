@@ -4,7 +4,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from './screens/HomeScreen';
 import RoutineScreen from './screens/RoutineScreen'; 
 import ExerciseLogScreen from './screens/ExerciseLogScreen';
-
+import TrackerListScreen from './screens/TrackerListScreen';
+import CustomTrackerScreen from './screens/CustomTrackerScreen';
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -14,6 +15,8 @@ export default function App() {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Routine" component={RoutineScreen} />
         <Stack.Screen name="ExerciseLog" component={ExerciseLogScreen} />
+          <Stack.Screen name="TrackerList" component={TrackerListScreen} />
+  <Stack.Screen name="CustomTracker" component={CustomTrackerScreen} />
 
       </Stack.Navigator>
     </NavigationContainer>
