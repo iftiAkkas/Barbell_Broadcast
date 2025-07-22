@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import SocialHomeScreen from './SocialHome';
 import SocialMessages from './SocialMessages';
 import HomeStack from './SocialHomeStack';
+import SocialMessagesTabs from './SocialMessagesTabs';
 
 const Tab = createBottomTabNavigator();
 
@@ -25,7 +26,7 @@ export default function SocialTabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeStack} />
-      <Tab.Screen name="Messages" component={SocialMessages} />
+      <Tab.Screen name="Messages" component={SocialMessagesTabs} />
     </Tab.Navigator>
   );
 }
