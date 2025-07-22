@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,27 +6,63 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
 } from 'react-native';
+import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { db, auth } from '../../firebase/config';
 import { router } from 'expo-router';
-
-const dummyChats = [
-  {
-    id: '1',
-    userName: 'Alice',
-    userAvatar: 'https://i.pravatar.cc/150?img=1',
-    lastMessage: 'Hey, how are you?',
-    timestamp: '2 min ago',
-  },
-  {
-    id: '2',
-    userName: 'Bob',
-    userAvatar: 'https://i.pravatar.cc/150?img=2',
-    lastMessage: 'Let’s meet tomorrow!',
-    timestamp: '5 min ago',
-  },
-];
+import { SafeAreaView } from 'react-native-safe-area-context'; // ✅ Important
 
 export default function PrivateMessages() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const currentUserId = auth.currentUser?.uid;
+
+  useEffect(() => {
+    const fetchUsersWithLatestMessages = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'users'));
+        const fetchedUsers = [];
+
+        for (const doc of querySnapshot.docs) {
+          if (doc.id !== currentUserId) {
+            const userData = doc.data();
+            const userName = `${userData.firstName} ${userData.lastName}`;
+            const chatId =
+              currentUserId < doc.id
+                ? `${currentUserId}_${doc.id}`
+                : `${doc.id}_${currentUserId}`;
+
+            const messagesRef = collection(db, 'chats', chatId, 'messages');
+            const latestMsgQuery = query(messagesRef, orderBy('createdAt', 'desc'), limit(1));
+            const msgSnapshot = await getDocs(latestMsgQuery);
+
+            let latestMessage = 'Tap to chat';
+            if (!msgSnapshot.empty) {
+              const latest = msgSnapshot.docs[0].data();
+              latestMessage = latest.text || 'Media';
+            }
+
+            fetchedUsers.push({
+              id: doc.id,
+              userName,
+              userAvatar: null,
+              latestMessage,
+            });
+          }
+        }
+
+        setUsers(fetchedUsers);
+      } catch (error) {
+        console.error('Error fetching users or messages:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsersWithLatestMessages();
+  }, []);
+
   const renderChatItem = ({ item }) => (
     <TouchableOpacity
       style={styles.chatContainer}
@@ -37,37 +73,56 @@ export default function PrivateMessages() {
         });
       }}
     >
-      <Image source={{ uri: item.userAvatar }} style={styles.avatar} />
+      <Image
+        source={{
+          uri:
+            item.userAvatar ||
+            'https://ui-avatars.com/api/?name=' + encodeURIComponent(item.userName),
+        }}
+        style={styles.avatar}
+      />
       <View style={styles.chatDetails}>
         <Text style={styles.userName}>{item.userName}</Text>
         <Text style={styles.lastMessage} numberOfLines={1}>
-          {item.lastMessage}
+          {item.latestMessage}
         </Text>
       </View>
-      <Text style={styles.timestamp}>{item.timestamp}</Text>
     </TouchableOpacity>
   );
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#555" />
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <FlatList
-        data={dummyChats}
+        data={users}
         keyExtractor={(item) => item.id}
         renderItem={renderChatItem}
         contentContainerStyle={{ padding: 12 }}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+     // Adjusted to prevent overlap with the tab bar
+  },
   chatContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
     borderBottomColor: '#ddd',
     borderBottomWidth: 1,
+    
   },
   avatar: {
     width: 50,
@@ -77,18 +132,21 @@ const styles = StyleSheet.create({
   },
   chatDetails: {
     flex: 1,
+    //marginBottom: 20,
   },
   userName: {
     fontWeight: 'bold',
     fontSize: 16,
+    marginBottom: 2,
   },
   lastMessage: {
     fontSize: 14,
-    color: '#666',
-    marginTop: 2,
+    color: '#444',
+    fontWeight: '500',
   },
-  timestamp: {
-    fontSize: 12,
-    color: '#999',
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
