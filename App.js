@@ -6,6 +6,8 @@ import RoutineScreen from './screens/RoutineScreen';
 import ExerciseLogScreen from './screens/ExerciseLogScreen';
 import TrackerListScreen from './screens/TrackerListScreen';
 import CustomTrackerScreen from './screens/CustomTrackerScreen';
+import PersonalInfoScreen from './screens/PersonalInfoScreen'; 
+
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -17,6 +19,8 @@ export default function App() {
         <Stack.Screen name="ExerciseLog" component={ExerciseLogScreen} options={{ title: 'Workout Log' }}/>
           <Stack.Screen name="TrackerList" component={TrackerListScreen} options={{ title: 'Trackers' }}/>
   <Stack.Screen name="CustomTracker" component={CustomTrackerScreen} options={{ title: 'Tracker' }}/>
+    <Stack.Screen name="Personal Info" component={PersonalInfoScreen} options={{ title: 'Personal Info' }}
+/>
 
       </Stack.Navigator>
     </NavigationContainer>

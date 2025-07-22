@@ -3,9 +3,20 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 export default function HomeScreen({ navigation }) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Barbell Broadcast</Text>
 
+    
+    
+    <View style={styles.container}>
+
+      <TouchableOpacity
+  style={styles.profileIcon}
+  onPress={() => navigation.navigate('Personal Info')}
+>
+  <Text style={styles.profileIconText}>👤</Text>
+</TouchableOpacity>
+
+      <Text style={styles.header}>Barbell Broadcast</Text>
+ 
       <TouchableOpacity
         style={styles.btn}
         onPress={() => navigation.navigate('Routine')}
@@ -40,6 +51,7 @@ export default function HomeScreen({ navigation }) {
       >
         <Text style={styles.btnText}>Gymbot</Text>
       </TouchableOpacity>
+      
     </View>
   );
 }
@@ -56,4 +68,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   btnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+profileIcon: {
+  position: 'absolute',
+  top: 16,
+  left: 16,
+  zIndex: 10,
+  padding: 8,
+  backgroundColor: '#eee',
+  borderRadius: 20,
+  elevation: 3,
+  shadowColor: '#000',
+  shadowOpacity: 0.2,
+  shadowOffset: { width: 0, height: 1 },
+  shadowRadius: 2,
+},
+profileIconText: {
+  fontSize: 20,
+}
+
+
+  
 });
