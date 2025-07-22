@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   header: { fontSize: 24, fontWeight: 'bold', marginBottom: 30 },
   btn: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#07c5ffff',
     padding: 14,
     borderRadius: 8,
     marginVertical: 10,

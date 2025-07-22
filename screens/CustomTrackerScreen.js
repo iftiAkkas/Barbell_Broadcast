@@ -1,3 +1,5 @@
+// ADD A GOAL HORIZONTAL LINE LATER
+
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -13,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -66,6 +69,53 @@ export default function CustomTrackerScreen({ route }) {
   const sortedEntries = Object.entries(logs).sort((a, b) => new Date(a[0]) - new Date(b[0]));
   const graphLabels = sortedEntries.map(([date]) => date.slice(5)); // MM-DD
   const graphData = sortedEntries.map(([_, val]) => Number(val));
+
+
+
+    const navigation = useNavigation();
+const deleteTracker = async () => {
+  Alert.alert(
+    'Confirm Deletion',
+    `Delete tracker "${title}" and all data?`,
+    [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            // Delete this tracker's log data
+            await AsyncStorage.removeItem(`tracker_${trackerKey}`);
+
+            // Delete from customTrackers list
+            const stored = await AsyncStorage.getItem('customTrackers');
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              const updated = parsed.filter(t => t.name !== title); // Remove from list
+              await AsyncStorage.setItem('customTrackers', JSON.stringify(updated));
+            }
+
+            Alert.alert('Deleted', `"${title}" tracker deleted.`);
+            navigation.goBack(); // return to tracker list
+          } catch (err) {
+            console.error(err);
+            Alert.alert('Error', 'Could not delete tracker.');
+          }
+        }
+      }
+    ]
+  );
+};
+
+
+
+
+
+
+
+
+
+
 
   return (
     <ScrollView style={styles.container}>
@@ -133,6 +183,17 @@ export default function CustomTrackerScreen({ route }) {
             </TouchableOpacity>
           </View>
         ))}
+
+
+        <TouchableOpacity
+  onPress={deleteTracker}
+  style={{ marginTop: 30, padding: 12, backgroundColor: '#dc3545', borderRadius: 6 }}
+>
+  <Text style={{ color: '#fff', textAlign: 'center', fontWeight: 'bold' }}>
+    Delete Tracker
+  </Text>
+</TouchableOpacity>
+
     </ScrollView>
   );
 }

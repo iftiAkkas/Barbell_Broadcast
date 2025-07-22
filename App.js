@@ -14,9 +14,9 @@ export default function App() {
       <Stack.Navigator initialRouteName="Home">
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Routine" component={RoutineScreen} />
-        <Stack.Screen name="ExerciseLog" component={ExerciseLogScreen} />
-          <Stack.Screen name="TrackerList" component={TrackerListScreen} />
-  <Stack.Screen name="CustomTracker" component={CustomTrackerScreen} />
+        <Stack.Screen name="ExerciseLog" component={ExerciseLogScreen} options={{ title: 'Workout Log' }}/>
+          <Stack.Screen name="TrackerList" component={TrackerListScreen} options={{ title: 'Trackers' }}/>
+  <Stack.Screen name="CustomTracker" component={CustomTrackerScreen} options={{ title: 'Tracker' }}/>
 
       </Stack.Navigator>
     </NavigationContainer>

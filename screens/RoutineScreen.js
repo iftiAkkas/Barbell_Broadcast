@@ -1,3 +1,7 @@
+// Sets and Reps should display Range
+// Couldn't fix, leaving it for later
+
+
 import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -63,17 +67,19 @@ const handleSave = async () => {
   selectedDays.forEach((day) => {
     finalRoutine.dayTitles[day] = dayData[day].title;
 
-    const cleanExercises = dayData[day].exercises
-      .map((ex, i) => ({
-        ex,
-        sets: dayData[day].sets[i],
-        reps: dayData[day].reps[i],
-      }))
-      .filter(item => item.ex.trim() !== '');
+  const cleanExercises = dayData[day].exercises
+  .map((ex, i) => ({
+    ex: ex.trim(),
+    sets: dayData[day].sets[i]?.toString().trim() || '0',
+    reps: dayData[day].reps[i]?.toString().trim() || '0',
+  }))
+  .filter(item => item.ex !== '');
 
-    finalRoutine.exercises[day] = cleanExercises.map(e => e.ex);
-    finalRoutine.sets[day] = cleanExercises.map(e => e.sets);
-    finalRoutine.reps[day] = cleanExercises.map(e => e.reps);
+finalRoutine.dayTitles[day] = dayData[day].title;
+finalRoutine.exercises[day] = cleanExercises.map(e => e.ex);
+finalRoutine.sets[day] = cleanExercises.map(e => parseInt(e.sets));
+finalRoutine.reps[day] = cleanExercises.map(e => parseInt(e.reps));
+
   });
 
   try {
@@ -147,7 +153,7 @@ const handleSave = async () => {
       <TextInput
         style={styles.input}
         placeholder="Sets"
-        keyboardType="numeric"
+        // keyboardType="numeric"
         value={dayData[day].sets[idx]}
         onChangeText={text => {
           const updated = [...dayData[day].sets];
@@ -226,35 +232,46 @@ const handleSave = async () => {
     <Text style={styles.subtitle}>
       {day} - {routine.dayTitles?.[day] || ''}
     </Text>
+{(routine.exercises?.[day] || []).map((ex, j) => {
+  const setVal = routine.sets?.[day]?.[j] || '?';
+  const repVal = routine.reps?.[day]?.[j] || '?';
 
-    {(routine.exercises?.[day] || []).map((ex, j) => (
-      <Text key={j} style={styles.exerciseLine}>
-        • {ex} ({routine.sets?.[day]?.[j] || '0'} sets × {routine.reps?.[day]?.[j] || '0'} reps)
-      </Text>
-    ))}
+  return (
+    <Text key={j} style={styles.exerciseLine}>
+      • {ex} ({setVal} sets × {repVal} reps)
+    </Text>
+  );
+})}
+
+
+
+
   </View>
 ))}
 
 
     <TouchableOpacity
       style={styles.editBtn}
-      onPress={() => {
-        setCreating(true);
-        setRoutineTitle(routine.title);
-        setSelectedDays(routine.selectedDays);
+    onPress={() => {
+  setCreating(true);
+  setRoutineTitle(routine.title);
+  setSelectedDays(routine.selectedDays);
 
-        // Reconstruct dayData format
-        const newDayData = {};
-        routine.selectedDays.forEach(day => {
-          newDayData[day] = {
-            title: routine.dayTitles[day],
-            exercises: routine.exercises[day],
-            sets: [],
-            reps: [],
-          };
-        });
-        setDayData(newDayData);
-      }}
+  const newDayData = {};
+routine.selectedDays.forEach(day => {
+  newDayData[day] = {
+    title: routine.dayTitles[day],
+    exercises: routine.exercises[day],
+    sets: routine.sets?.[day] || [],    
+    reps: routine.reps?.[day] || [],    
+  };
+});
+
+
+
+  setDayData(newDayData);
+}}
+
     >
       <Text style={styles.btnText}>Edit Routine</Text>
     </TouchableOpacity>
@@ -289,7 +306,7 @@ const styles = StyleSheet.create({
   selected: { backgroundColor: '#a0e1e5' },
   addMore: { color: '#007bff', marginTop: 6 },
   createBtn: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#07c5ffff',
     padding: 12,
     borderRadius: 6,
     alignItems: 'center',
@@ -302,7 +319,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   editBtn: {
-    backgroundColor: '#ffc107',
+    backgroundColor: '#07c5ffff',
     padding: 12,
     borderRadius: 6,
     alignItems: 'center',
