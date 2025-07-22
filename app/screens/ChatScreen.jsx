@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,25 +10,65 @@ import {
   Platform,
   SafeAreaView,
 } from 'react-native';
-
-const dummyMessages = [
-  { id: '1', sender: 'me', text: 'Hey Alice!' },
-  { id: '2', sender: 'other', text: 'Hey! How are you?' },
-  { id: '3', sender: 'me', text: 'Doing great. You?' },
-];
+import { useLocalSearchParams } from 'expo-router';
+import { db, auth } from '../../firebase/config';
+import {
+  addDoc,
+  collection,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+} from 'firebase/firestore';
 
 export default function ChatScreen() {
-  const [messages, setMessages] = useState(dummyMessages);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
 
-  const handleSend = () => {
+  const { userId, userName } = useLocalSearchParams(); // Corrected: get separate params
+  const currentUser = auth.currentUser;
+
+  // Handle auth not ready
+  if (!currentUser || !userId || !userName) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <Text>Loading chat...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  const chatId =
+    currentUser.uid < userId
+      ? `${currentUser.uid}_${userId}`
+      : `${userId}_${currentUser.uid}`;
+
+  useEffect(() => {
+    const q = query(
+      collection(db, 'chats', chatId, 'messages'),
+      orderBy('createdAt', 'asc')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const msgs = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setMessages(msgs);
+    });
+
+    return () => unsubscribe();
+  }, [chatId]);
+
+  const handleSend = async () => {
     if (input.trim() === '') return;
-    const newMessage = {
-      id: Date.now().toString(),
-      sender: 'me',
+
+    await addDoc(collection(db, 'chats', chatId, 'messages'), {
       text: input,
-    };
-    setMessages((prev) => [...prev, newMessage]);
+      senderId: currentUser.uid,
+      receiverId: userId,
+      createdAt: serverTimestamp(),
+    });
+
     setInput('');
   };
 
@@ -36,7 +76,7 @@ export default function ChatScreen() {
     <View
       style={[
         styles.messageBubble,
-        item.sender === 'me' ? styles.myMessage : styles.theirMessage,
+        item.senderId === currentUser.uid ? styles.myMessage : styles.theirMessage,
       ]}
     >
       <Text style={styles.messageText}>{item.text}</Text>
@@ -51,7 +91,7 @@ export default function ChatScreen() {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 70}
       >
         <View style={styles.header}>
-          <Text style={styles.headerText}>Chat</Text>
+          <Text style={styles.headerText}>Chat with {userName}</Text>
         </View>
 
         <FlatList
@@ -86,41 +126,32 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    marginTop: 35,
+    marginTop: 50, // Adjusted to prevent overlap with the tab bar
   },
   header: {
-    height: 60,
-    backgroundColor: '#4e6ef2',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-    marginTop: 15,
-    marginHorizontal: 10,
-    borderRadius: 15,
-    // Optional shadow for iOS:
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    // Optional elevation for Android:
-    elevation: 5,
+    padding: 16,
+    backgroundColor: '#0d6efd',
   },
-  headerText: { color: 'white', fontSize: 18, fontWeight: 'bold' },
+  headerText: {
+    fontSize: 18,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
   messageList: {
-    flexGrow: 1,
-    padding: 12,
+    padding: 10,
   },
   messageBubble: {
     padding: 10,
-    borderRadius: 12,
-    marginBottom: 10,
+    borderRadius: 10,
+    marginBottom: 8,
     maxWidth: '70%',
   },
   myMessage: {
-    backgroundColor: '#dcf8c6',
+    backgroundColor: '#DCF8C6',
     alignSelf: 'flex-end',
   },
   theirMessage: {
-    backgroundColor: '#eee',
+    backgroundColor: '#e5e5ea',
     alignSelf: 'flex-start',
   },
   messageText: {
@@ -128,26 +159,25 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flexDirection: 'row',
-    padding: 12,
-    borderTopColor: '#ddd',
+    padding: 10,
     borderTopWidth: 1,
-    alignItems: 'center',
+    borderColor: '#ddd',
     backgroundColor: '#fff',
-    marginBottom: 60,
+    marginBottom: 70,
   },
   input: {
     flex: 1,
+    fontSize: 16,
+    padding: 10,
     backgroundColor: '#f2f2f2',
     borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginRight: 8,
-    maxHeight: 100,
+    marginRight: 10,
   },
   sendButton: {
-    backgroundColor: '#4e6ef2',
-    paddingHorizontal: 16,
+    backgroundColor: '#0d6efd',
     paddingVertical: 10,
+    paddingHorizontal: 16,
     borderRadius: 20,
+    justifyContent: 'center',
   },
 });
