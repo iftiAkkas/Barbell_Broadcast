@@ -18,21 +18,48 @@ import {
   orderBy,
   onSnapshot,
   serverTimestamp,
+  getDocs,
 } from 'firebase/firestore';
 import { auth, db } from '../../firebase/config';
+
+// Import local image
+import DefaultAvatar from '../../assets/man.png';
 
 export default function CommunityMessages() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [usersMap, setUsersMap] = useState({});
   const flatListRef = useRef(null);
 
   const currentUser = auth.currentUser;
   const senderId = currentUser?.uid;
   const senderName = currentUser?.displayName || 'Me';
   const senderAvatar =
-    currentUser?.photoURL ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(senderName)}`;
+    currentUser?.photoURL || DefaultAvatar;
 
+  // Fetch users to create a map of userId -> full name & avatar
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, 'users'));
+        const map = {};
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const fullName = `${(data.firstName || '').trim()} ${(data.lastName || '').trim()}`.trim();
+          map[doc.id] = {
+            fullName: fullName || 'Unknown',
+            avatar: data.profileImage || DefaultAvatar,
+          };
+        });
+        setUsersMap(map);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  // Listen to messages in real time
   useEffect(() => {
     const q = query(collection(db, 'communityChats'), orderBy('createdAt', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -59,6 +86,12 @@ export default function CommunityMessages() {
 
   const renderItem = ({ item }) => {
     const isMe = item.senderId === senderId;
+    const userInfo = usersMap[item.senderId] || {};
+    const displayName = isMe ? senderName : userInfo.fullName || item.senderName || 'Unknown';
+    const displayAvatar = isMe
+      ? senderAvatar
+      : userInfo.avatar || item.senderAvatar || DefaultAvatar;
+
     return (
       <View
         style={[
@@ -66,16 +99,29 @@ export default function CommunityMessages() {
           isMe ? styles.myMessage : styles.otherMessage,
         ]}
       >
-        {!isMe && <Image source={{ uri: item.senderAvatar }} style={styles.avatar} />}
+        {!isMe && (
+          typeof displayAvatar === 'string' ? (
+            <Image source={{ uri: displayAvatar }} style={styles.avatar} />
+          ) : (
+            <Image source={displayAvatar} style={styles.avatar} />
+          )
+        )}
         <View
           style={[
             styles.messageContent,
             isMe ? styles.myBubble : styles.otherBubble,
           ]}
         >
-          {!isMe && <Text style={styles.senderName}>{item.senderName}</Text>}
+          {!isMe && <Text style={styles.senderName}>{displayName}</Text>}
           <Text style={{ color: isMe ? 'white' : 'black' }}>{item.text}</Text>
         </View>
+        {isMe && (
+          typeof displayAvatar === 'string' ? (
+            <Image source={{ uri: displayAvatar }} style={styles.avatar} />
+          ) : (
+            <Image source={displayAvatar} style={styles.avatar} />
+          )
+        )}
       </View>
     );
   };
