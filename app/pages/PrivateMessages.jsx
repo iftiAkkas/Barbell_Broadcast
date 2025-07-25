@@ -13,6 +13,9 @@ import { db, auth } from '../../firebase/config';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+// Import your local fallback avatar
+import DefaultAvatar from '../../assets/man.png';
+
 export default function PrivateMessages() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -75,14 +78,12 @@ export default function PrivateMessages() {
         });
       }}
     >
-      <Image
-        source={{
-          uri:
-            item.profileImage ||
-            'https://ui-avatars.com/api/?name=' + encodeURIComponent(item.userName),
-        }}
-        style={styles.avatar}
-      />
+      {item.profileImage ? (
+        <Image source={{ uri: item.profileImage }} style={styles.avatar} />
+      ) : (
+        <Image source={DefaultAvatar} style={styles.avatar} />
+      )}
+
       <View style={styles.chatDetails}>
         <Text style={styles.userName}>{item.userName}</Text>
         <Text style={styles.lastMessage} numberOfLines={1}>
