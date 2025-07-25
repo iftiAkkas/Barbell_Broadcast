@@ -3,7 +3,7 @@ import {
   View, Text, Image, TouchableOpacity, StyleSheet, Modal, Alert, Pressable,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { doc, updateDoc, arrayUnion, arrayRemove, increment } from 'firebase/firestore';
+import { doc, updateDoc, arrayUnion, arrayRemove, increment, getDoc } from 'firebase/firestore';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import { db, auth } from '../../firebase/config';
@@ -17,6 +17,26 @@ const PostCard = ({ item, onDelete, isFirst }) => {
   const [liked, setLiked] = useState(item.likedBy?.includes(userId));
   const [likeCount, setLikeCount] = useState(item.likeCount || 0);
   const [modalVisible, setModalVisible] = useState(false);
+  const [profileImage, setProfileImage] = useState(null);
+  const [userName, setUserName] = useState(item.userName); // fallback
+
+  // Fetch profile image from Firestore
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', item.userId));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          setProfileImage(data.profileImage || null);
+          if (data.name) setUserName(data.name);
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+
+    fetchUserProfile();
+  }, [item.userId]);
 
   useEffect(() => {
     setLiked(item.likedBy?.includes(userId));
@@ -69,16 +89,16 @@ const PostCard = ({ item, onDelete, isFirst }) => {
   };
 
   const userImgSource =
-    typeof item.userImg === 'string' && item.userImg.startsWith('http')
-      ? { uri: item.userImg }
-      : require('../../assets/back.png');
+    typeof profileImage === 'string' && profileImage.startsWith('http')
+      ? { uri: profileImage }
+      : require('../../assets/man.png'); // fallback image
 
   return (
     <View style={[styles.card, isFirst && styles.firstCard]}>
       <View style={styles.userInfo}>
         <Image source={userImgSource} style={styles.userImg} />
         <View>
-          <Text style={styles.userName}>{item.userName}</Text>
+          <Text style={styles.userName}>{userName}</Text>
           <Text style={styles.postTime}>
             {item.createdAt?.toDate
               ? `${formatDistanceToNow(item.createdAt.toDate(), { addSuffix: true })}`
