@@ -11,7 +11,7 @@ import {
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import { db, auth } from '../../firebase/config';
 import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context'; // ✅ Important
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function PrivateMessages() {
   const [users, setUsers] = useState([]);
@@ -28,6 +28,8 @@ export default function PrivateMessages() {
           if (doc.id !== currentUserId) {
             const userData = doc.data();
             const userName = `${userData.firstName} ${userData.lastName}`;
+            const profileImage = userData.profileImage || null; // get profileImage here
+
             const chatId =
               currentUserId < doc.id
                 ? `${currentUserId}_${doc.id}`
@@ -46,7 +48,7 @@ export default function PrivateMessages() {
             fetchedUsers.push({
               id: doc.id,
               userName,
-              userAvatar: null,
+              profileImage,  // use profileImage here
               latestMessage,
             });
           }
@@ -69,14 +71,14 @@ export default function PrivateMessages() {
       onPress={() => {
         router.push({
           pathname: '/screens/ChatScreen',
-          params: { userId: item.id, userName: item.userName },
+          params: { userId: item.id, userName: item.userName, profileImage: item.profileImage },
         });
       }}
     >
       <Image
         source={{
           uri:
-            item.userAvatar ||
+            item.profileImage ||
             'https://ui-avatars.com/api/?name=' + encodeURIComponent(item.userName),
         }}
         style={styles.avatar}
@@ -114,7 +116,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-     // Adjusted to prevent overlap with the tab bar
   },
   chatContainer: {
     flexDirection: 'row',
@@ -122,7 +123,6 @@ const styles = StyleSheet.create({
     padding: 12,
     borderBottomColor: '#ddd',
     borderBottomWidth: 1,
-    
   },
   avatar: {
     width: 50,
@@ -132,7 +132,6 @@ const styles = StyleSheet.create({
   },
   chatDetails: {
     flex: 1,
-    //marginBottom: 20,
   },
   userName: {
     fontWeight: 'bold',
