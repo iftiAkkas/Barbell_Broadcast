@@ -22,7 +22,7 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from '../../firebase/config';
 
-// Import local image
+// Import local image as fallback
 import DefaultAvatar from '../../assets/man.png';
 
 export default function CommunityMessages() {
@@ -33,11 +33,8 @@ export default function CommunityMessages() {
 
   const currentUser = auth.currentUser;
   const senderId = currentUser?.uid;
-  const senderName = currentUser?.displayName || 'Me';
-  const senderAvatar =
-    currentUser?.photoURL || DefaultAvatar;
 
-  // Fetch users to create a map of userId -> full name & avatar
+  // Fetch all user data into a userId => { fullName, profileImage } map
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -48,7 +45,7 @@ export default function CommunityMessages() {
           const fullName = `${(data.firstName || '').trim()} ${(data.lastName || '').trim()}`.trim();
           map[doc.id] = {
             fullName: fullName || 'Unknown',
-            avatar: data.profileImage || DefaultAvatar,
+            avatar: data.profileImage || null,
           };
         });
         setUsersMap(map);
@@ -59,7 +56,7 @@ export default function CommunityMessages() {
     fetchUsers();
   }, []);
 
-  // Listen to messages in real time
+  // Listen to community chat messages
   useEffect(() => {
     const q = query(collection(db, 'communityChats'), orderBy('createdAt', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -71,6 +68,11 @@ export default function CommunityMessages() {
 
   const handleSend = async () => {
     if (!input.trim()) return;
+
+    // Use usersMap to get senderName and avatar
+    const senderInfo = usersMap[senderId] || {};
+    const senderName = senderInfo.fullName || 'Me';
+    const senderAvatar = senderInfo.avatar || null;
 
     await addDoc(collection(db, 'communityChats'), {
       text: input,
@@ -86,11 +88,19 @@ export default function CommunityMessages() {
 
   const renderItem = ({ item }) => {
     const isMe = item.senderId === senderId;
+
     const userInfo = usersMap[item.senderId] || {};
-    const displayName = isMe ? senderName : userInfo.fullName || item.senderName || 'Unknown';
-    const displayAvatar = isMe
-      ? senderAvatar
-      : userInfo.avatar || item.senderAvatar || DefaultAvatar;
+    const displayName = isMe
+      ? usersMap[senderId]?.fullName || 'Me'
+      : userInfo.fullName || item.senderName || 'Unknown';
+
+    const displayAvatar =
+      userInfo.avatar || item.senderAvatar || DefaultAvatar;
+
+    const avatarSource =
+      typeof displayAvatar === 'string'
+        ? { uri: displayAvatar }
+        : displayAvatar;
 
     return (
       <View
@@ -99,13 +109,7 @@ export default function CommunityMessages() {
           isMe ? styles.myMessage : styles.otherMessage,
         ]}
       >
-        {!isMe && (
-          typeof displayAvatar === 'string' ? (
-            <Image source={{ uri: displayAvatar }} style={styles.avatar} />
-          ) : (
-            <Image source={displayAvatar} style={styles.avatar} />
-          )
-        )}
+        {!isMe && <Image source={avatarSource} style={styles.avatar} />}
         <View
           style={[
             styles.messageContent,
@@ -115,13 +119,7 @@ export default function CommunityMessages() {
           {!isMe && <Text style={styles.senderName}>{displayName}</Text>}
           <Text style={{ color: isMe ? 'white' : 'black' }}>{item.text}</Text>
         </View>
-        {isMe && (
-          typeof displayAvatar === 'string' ? (
-            <Image source={{ uri: displayAvatar }} style={styles.avatar} />
-          ) : (
-            <Image source={displayAvatar} style={styles.avatar} />
-          )
-        )}
+        {isMe && <Image source={avatarSource} style={styles.avatar} />}
       </View>
     );
   };
@@ -131,7 +129,7 @@ export default function CommunityMessages() {
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 80} // adjust as needed
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 80}
       >
         <View style={styles.container}>
           <FlatList

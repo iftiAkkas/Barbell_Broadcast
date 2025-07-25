@@ -22,21 +22,23 @@ const PostCard = ({ item, onDelete, isFirst }) => {
 
   // Fetch profile image from Firestore
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const userDoc = await getDoc(doc(db, 'users', item.userId));
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-          setProfileImage(data.profileImage || null);
-          if (data.name) setUserName(data.name);
-        }
-      } catch (error) {
-        console.error('Error fetching user profile:', error);
+  const fetchUserProfile = async () => {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', item.userId));
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        setProfileImage(data.profileImage || null);
+        const fullName = `${(data.firstName || '').trim()} ${(data.lastName || '').trim()}`.trim();
+        setUserName(fullName || 'Unknown');
       }
-    };
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
 
-    fetchUserProfile();
-  }, [item.userId]);
+  fetchUserProfile();
+}, [item.userId]);
+
 
   useEffect(() => {
     setLiked(item.likedBy?.includes(userId));
