@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
+  Image,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { db, auth } from '../../firebase/config';
@@ -25,10 +26,9 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
 
-  const { userId, userName } = useLocalSearchParams(); // Corrected: get separate params
+  const { userId, userName, profileImage } = useLocalSearchParams();
   const currentUser = auth.currentUser;
 
-  // Handle auth not ready
   if (!currentUser || !userId || !userName) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -83,6 +83,11 @@ export default function ChatScreen() {
     </View>
   );
 
+  const profileImageSource =
+    typeof profileImage === 'string' && profileImage.startsWith('http')
+      ? { uri: profileImage }
+      : require('../../assets/man.png');
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
@@ -91,7 +96,11 @@ export default function ChatScreen() {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 70}
       >
         <View style={styles.header}>
-          <Text style={styles.headerText}>Chat with {userName}</Text>
+          {/* White circular background around profile image */}
+          <View style={styles.profileImageWrapper}>
+            <Image source={profileImageSource} style={styles.profileImage} />
+          </View>
+          <Text style={styles.headerText}>{userName}</Text>
         </View>
 
         <FlatList
@@ -126,11 +135,24 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    marginTop: 50, // Adjusted to prevent overlap with the tab bar
+    marginTop: 50,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 16,
     backgroundColor: '#0d6efd',
+  },
+  profileImageWrapper: {
+    backgroundColor: '#fff',
+    borderRadius: 24, // half of wrapper size for perfect circle
+    padding: 2,
+    marginRight: 10,
+  },
+  profileImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   headerText: {
     fontSize: 18,
