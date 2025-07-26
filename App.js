@@ -7,6 +7,7 @@ import ExerciseLogScreen from './screens/ExerciseLogScreen';
 import TrackerListScreen from './screens/TrackerListScreen';
 import CustomTrackerScreen from './screens/CustomTrackerScreen';
 import PersonalInfoScreen from './screens/PersonalInfoScreen'; 
+import ExerciseGraphScreen from './screens/ExerciseGraphScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -19,7 +20,9 @@ export default function App() {
         <Stack.Screen name="ExerciseLog" component={ExerciseLogScreen} options={{ title: 'Workout Log' }}/>
           <Stack.Screen name="TrackerList" component={TrackerListScreen} options={{ title: 'Trackers' }}/>
   <Stack.Screen name="CustomTracker" component={CustomTrackerScreen} options={{ title: 'Tracker' }}/>
+    <Stack.Screen name="ExerciseGraph" component={ExerciseGraphScreen} options={{title: 'Progress'}} />
     <Stack.Screen name="Personal Info" component={PersonalInfoScreen} options={{ title: 'Personal Info' }}
+    
 />
 
       </Stack.Navigator>

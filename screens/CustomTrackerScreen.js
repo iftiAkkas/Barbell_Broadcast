@@ -103,8 +103,27 @@ const deleteTracker = async () => {
           }
         }
       }
+
+      
     ]
   );
+};
+
+
+
+
+  const chartConfig = {
+  backgroundGradientFrom: '#f2f2f2',
+  backgroundGradientTo: '#f2f2f2',
+  color: (opacity = 1) => `rgba(0, 123, 255, ${opacity})`,
+  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+  strokeWidth: 3,
+  decimalPlaces: 0,
+  propsForDots: {
+    r: '3',
+    strokeWidth: '2',
+    stroke: '#007bff',
+  },
 };
 
 
@@ -160,13 +179,7 @@ const deleteTracker = async () => {
             width={screenWidth - 32}
             height={220}
             yAxisSuffix=""
-            chartConfig={{
-              backgroundGradientFrom: "#f2f2f2",
-              backgroundGradientTo: "#e2e2e2",
-              color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-              labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-              strokeWidth: 2,
-            }}
+              chartConfig={chartConfig}
             style={{ borderRadius: 10, marginVertical: 10 }}
           />
         </>

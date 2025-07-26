@@ -1,4 +1,7 @@
-// DELETE BUTTONS DONT WORK
+//Issues to fix
+
+//If some exercise is not done, still 1 set is displayed
+//Screen bottom needs padding
 
 import React, { useEffect, useState } from 'react';
 import {
@@ -17,7 +20,8 @@ import { Platform } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
 
-export default function ExerciseLogScreen() {
+export default function ExerciseLogScreen({ navigation }) {
+
   const [routine, setRoutine] = useState(null);
   const [selectedDay, setSelectedDay] = useState(null);
   const [logDate, setLogDate] = useState(new Date().toISOString().split('T')[0]);
@@ -348,9 +352,21 @@ export default function ExerciseLogScreen() {
                 <Text style={styles.logDate}>{date}</Text>
 
                 {Object.entries(val.log || {}).map(([ex, sets], j) => (
-                  <Text key={j} style={styles.readOnlyText}>
-                    {ex}: {sets.map((s, si) => `Set ${si + 1}: ${s.reps}x${s.weight}`).join(', ')}
-                  </Text>
+                 <TouchableOpacity
+  key={j}
+  onPress={() =>
+    navigation.navigate('ExerciseGraph', {
+      exerciseName: ex,
+      logsForDay: logsForDay,
+      selectedDay: selectedDay,
+    })
+  }
+>
+  <Text style={[styles.readOnlyText, { color: '#007bff' }]}>
+    {ex}: {sets.map((s, si) => `Set ${si + 1}: ${s.reps}x${s.weight}`).join(', ')}
+  </Text>
+</TouchableOpacity>
+
                 ))}
 
                 {(val.additionalExercises || []).map((ae, j) => (
