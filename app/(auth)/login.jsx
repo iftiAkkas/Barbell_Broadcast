@@ -13,7 +13,7 @@ export default function Login() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       Alert.alert('Logged in!');
-      router.replace('/(tabs)/');
+      router.replace('/(tabs)/omi');
     } catch (error) {
       Alert.alert('Login Failed', error.message);
       router.replace('/');
