@@ -91,7 +91,6 @@ export default function Dashboard() {
         <TouchableOpacity style={[styles.button, styles.water]}>
           <Text style={styles.buttonText}>💧 Log Water</Text>
         </TouchableOpacity>
-          
 
       </View>
 

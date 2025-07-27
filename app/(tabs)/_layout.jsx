@@ -42,6 +42,16 @@ export default function Layout() {
           ),
         }}
       />
+
+        <Tabs.Screen
+        name="omi"
+        options={{
+          title: "Omi",
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
