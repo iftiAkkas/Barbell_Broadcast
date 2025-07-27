@@ -1,1 +1,0 @@
-import ...../../components/omi.jsx
