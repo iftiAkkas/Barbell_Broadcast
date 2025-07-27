@@ -92,14 +92,6 @@ export default function Dashboard() {
           <Text style={styles.buttonText}>💧 Log Water</Text>
         </TouchableOpacity>
 
-         <TouchableOpacity
-  style={[styles.button, styles.water]}
-  onPress={() => navigation.navigate('OmiScreen')}
->
-  <Text style={styles.buttonText}>Omi</Text>
-</TouchableOpacity>
-
-
       </View>
 
       {/* Motivation Quote */}
