@@ -129,8 +129,6 @@ const calculateMaintenanceCalories = () => {
 };
 
 
-
-
 return (
   <KeyboardAvoidingView
     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

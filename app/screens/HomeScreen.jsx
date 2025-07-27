@@ -1,91 +1,54 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen() {
+  const navigation = useNavigation();
+
   return (
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Welcome to the Fitness Dashboard 💪</Text>
 
-    
-    
-    <View style={styles.container}>
-
-      <TouchableOpacity
-  style={styles.profileIcon}
-  onPress={() => navigation.navigate('Personal Info')}
->
-  <Text style={styles.profileIconText}>👤</Text>
-</TouchableOpacity>
-
-      <Text style={styles.header}>Barbell Broadcast</Text>
- 
-      <TouchableOpacity
-        style={styles.btn}
-        onPress={() => navigation.navigate('Routine')}
-      >
-        <Text style={styles.btnText}>Routine</Text>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('ExerciseLog')}>
+        <Text style={styles.buttonText}>🏋️ Workout Log</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.btn}
-        onPress={() => navigation.navigate('ExerciseLog')}
-      >
-        <Text style={styles.btnText}>Workout Log</Text>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Routine')}>
+        <Text style={styles.buttonText}>📋 Routine</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.btn}
-        onPress={() => navigation.navigate('TrackerList')}
-      >
-        <Text style={styles.btnText}>Trackers</Text>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('TrackerList')}>
+        <Text style={styles.buttonText}>📈 Trackers</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.btn}
-        onPress={() => alert('Coming soon!')}
-      >
-        <Text style={styles.btnText}>Social Platform</Text>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('PersonalInfo')}>
+        <Text style={styles.buttonText}>👤 Personal Info</Text>
       </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.btn}
-        onPress={() => alert('Chatbot coming soon!')}
-      >
-        <Text style={styles.btnText}>Gymbot</Text>
-      </TouchableOpacity>
-      
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  header: { fontSize: 24, fontWeight: 'bold', marginBottom: 30 },
-  btn: {
-    backgroundColor: '#07c5ffff',
-    padding: 14,
-    borderRadius: 8,
-    marginVertical: 10,
-    width: '80%',
-    alignItems: 'center',
+  container: {
+    padding: 20,
+    justifyContent: 'center',
+    alignItems: 'stretch',
   },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-profileIcon: {
-  position: 'absolute',
-  top: 16,
-  left: 16,
-  zIndex: 10,
-  padding: 8,
-  backgroundColor: '#eee',
-  borderRadius: 20,
-  elevation: 3,
-  shadowColor: '#000',
-  shadowOpacity: 0.2,
-  shadowOffset: { width: 0, height: 1 },
-  shadowRadius: 2,
-},
-profileIconText: {
-  fontSize: 20,
-}
-
-
-  
+  title: {
+    fontSize: 22,
+    textAlign: 'center',
+    marginBottom: 20,
+    fontWeight: 'bold',
+  },
+  button: {
+    backgroundColor: '#4A90E2',
+    padding: 15,
+    borderRadius: 10,
+    marginVertical: 8,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    textAlign: 'center',
+  },
 });
