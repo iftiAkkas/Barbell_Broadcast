@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons'; // or use MaterialIcons, FontAwes
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import React from 'react';
-import Dashboard from './Dashboard';
 import Exercises from './Exercises';
 import Profile from './Profile';
 // import Social from './Social';
@@ -38,7 +37,7 @@ export default function App() {
           //tabBarStyle: route.name === 'Socials' ? { display: 'none' } : {},
         })}
       >
-        <Tab.Screen name="Home" component={Dashboard} />
+        
         <Tab.Screen name="Exercises" component={Exercises} />
         <Tab.Screen name="Socials" component={SocialTabs} />
         <Tab.Screen name="Profile" component={Profile} />

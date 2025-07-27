@@ -5,8 +5,9 @@ import { Tabs } from 'expo-router';
 export default function Layout() {
   return (
     <Tabs screenOptions={{ headerShown: false }}>
-      <Tabs.Screen
-        name="index"
+
+       <Tabs.Screen
+        name="omi"
         options={{
           title: "Home",
           tabBarIcon: ({ focused, color, size }) => (
@@ -14,6 +15,7 @@ export default function Layout() {
           ),
         }}
       />
+
       <Tabs.Screen
         name="exercises"
         options={{
@@ -23,6 +25,7 @@ export default function Layout() {
           ),
         }}
       />
+    
       <Tabs.Screen
         name="social"
         options={{
@@ -43,15 +46,7 @@ export default function Layout() {
         }}
       />
 
-        <Tabs.Screen
-        name="omi"
-        options={{
-          title: "Omi",
-          tabBarIcon: ({ focused, color, size }) => (
-            <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />
-          ),
-        }}
-      />
+       
     </Tabs>
   );
 }
