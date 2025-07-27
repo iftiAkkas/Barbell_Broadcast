@@ -47,12 +47,10 @@ const BodyPartCard = ({ item, router }) => {
         })
       }
     >
-      <Image source={item.image} resizeMode="cover" style={styles.cardImage} />
+      <Image source={item.image} style={styles.cardImage} />
       <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.9)']}
+        colors={['transparent', 'rgba(0,0,0,0.7)']}
         style={styles.gradientOverlay}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
       />
       <Text style={styles.cardText}>{item.name}</Text>
     </TouchableOpacity>
@@ -62,18 +60,18 @@ const BodyPartCard = ({ item, router }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffffff', // subtle light background
   },
   title: {
-    fontSize: hp('3.5%'),
+    fontSize: hp('3%'),
     fontWeight: 'bold',
-    color: '#404040',
-    marginBottom: hp('2%'),
+    color: '#333',
     paddingHorizontal: wp('5%'),
-    paddingTop: hp('2%'),
+    paddingTop: hp('3%'),
+    marginBottom: hp('2%'),
   },
   listContent: {
-    paddingHorizontal: wp('2.5%'),
+    paddingHorizontal: wp('3%'),
     paddingBottom: hp('5%'),
   },
   columnWrapper: {
@@ -81,35 +79,38 @@ const styles = StyleSheet.create({
     marginBottom: hp('2%'),
   },
   cardButton: {
-    width: wp('44%'),
-    height: hp('30%'),
-    borderRadius: 35,
+    width: wp('42%'),
+    height: hp('24%'),
+    borderRadius: 24,
     overflow: 'hidden',
-    backgroundColor: '#f5f5f5',
-    marginHorizontal: wp('1%'),
+    backgroundColor: '#f2f2f2',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
     position: 'relative',
   },
   cardImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 35,
   },
   gradientOverlay: {
     position: 'absolute',
     bottom: 0,
-    width: wp('44%'),
-    height: hp('15%'),
-    borderBottomLeftRadius: 35,
-    borderBottomRightRadius: 35,
+    height: '40%',
+    width: '100%',
   },
   cardText: {
     position: 'absolute',
-    bottom: hp('2%'),
+    bottom: hp('1.8%'),
     width: '100%',
     textAlign: 'center',
     color: '#fff',
-    fontWeight: '600',
-    letterSpacing: 1,
-    fontSize: hp('2.3%'),
+    fontWeight: '700',
+    fontSize: hp('2.1%'),
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 });
