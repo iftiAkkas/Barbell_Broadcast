@@ -1,14 +1,14 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
 import {
-    FlatList,
-    StyleSheet,
-    Text,
-    TouchableOpacity
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity
 } from 'react-native';
 import {
-    heightPercentageToDP as hp,
-    widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+  widthPercentageToDP as wp,
 } from 'react-native-responsive-screen';
 
 export default function ExerciseList({ data }) {
@@ -24,7 +24,7 @@ export default function ExerciseList({ data }) {
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
-      activeOpacity={0.7}
+      activeOpacity={0.85}
       onPress={() => onPressExercise(item)}
     >
       <Text style={styles.name}>{capitalize(item.name)}</Text>
@@ -53,40 +53,40 @@ function capitalize(str) {
 
 const styles = StyleSheet.create({
   listContent: {
-    paddingHorizontal: wp(4),
-    paddingTop: hp(2),
-    paddingBottom: hp(10),
+    paddingHorizontal: wp(5),
+    paddingTop: hp(3),
+    paddingBottom: hp(8),
   },
   row: {
     justifyContent: 'space-between',
     marginBottom: hp(2),
   },
   card: {
-    backgroundColor: '#f0f0f0',
-    borderRadius: 15,
-    padding: wp(4),
-    width: wp(44),
-    // Shadows (android + ios)
-    elevation: 2,
+    backgroundColor: '#ffe6cc',
+    borderRadius: 16,
+    paddingVertical: hp(2),
+    paddingHorizontal: wp(3),
+    width: wp(42),
+    elevation: 5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
-    shadowRadius: 2,
+    shadowRadius: 5,
   },
   name: {
-    fontSize: hp(2.2),
-    fontWeight: '600',
+    fontSize: hp(2),
+    fontWeight: '700',
     color: '#222',
+    marginBottom: hp(0.5),
   },
   bodyPart: {
-    marginTop: hp(0.5),
-    fontSize: hp(1.6),
-    color: '#555',
+    fontSize: hp(1.5),
+    color: '#444',
+    marginBottom: hp(0.3),
   },
   difficulty: {
-    marginTop: hp(0.3),
-    fontSize: hp(1.5),
+    fontSize: hp(1.4),
+    color: '#777',
     fontStyle: 'italic',
-    color: '#888',
   },
 });
