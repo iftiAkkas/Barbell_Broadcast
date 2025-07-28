@@ -58,9 +58,9 @@ const styles = StyleSheet.create({
     marginLeft: 15,
   },
   image: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 36,
   },
   bigContainer: {
     marginBottom: 20,

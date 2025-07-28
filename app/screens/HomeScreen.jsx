@@ -46,7 +46,7 @@ export default function HomeScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContainer}>
-      <Text style={styles.title}>🏋️ Fitness App</Text>
+      <Text style={[styles.title, { fontSize: 50 }]}>🏋️</Text>
 
       <LinearGradient
         colors={['#8B0000', '#B22222', '#A0522D']} // darker gradient
