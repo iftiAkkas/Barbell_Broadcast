@@ -7,7 +7,12 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Image,
 } from "react-native";
+
+import { LinearGradient } from 'expo-linear-gradient';
+import { vi } from "date-fns/locale";
+
 
 export default function Page() {
   const router = useRouter();
@@ -34,20 +39,31 @@ export default function Page() {
   }, [scaleAnim]);
 
   return (
-    <ImageBackground
-      source={require('../assets/fitness2.jpg')} // Replace with your cartoon bg image
-      style={styles.background}
-      resizeMode="cover"
-      blurRadius={4}
-    >
+    // <ImageBackground
+    //   source={require('../assets/fitness2.jpg')} // Replace with your cartoon bg image
+    //   style={styles.background}
+    //   resizeMode="cover"
+    //   blurRadius={4}
+    // >
+
+//     <LinearGradient
+//   colors={['#007aff', '#a6d3fbff']}
+//   style={styles.background}
+// >
+
+
+
+     <View style={[styles.background, { backgroundColor: "#0066ee" }]}>
+
       <View style={styles.overlay}>
-        <View style={styles.glassContainer}>
-          <Text style={styles.title}>Barbell Broadcast</Text>
-        </View>
+       
+          <Text style={styles.heading}>Barbell <Text style={styles.highlight}>Broadcast</Text></Text>
+
 
         <Text style={styles.subtitle}>
-          Track your workouts, progress, and stay motivated!
+         Your gains deserve better than Notes app logs.
         </Text>
+
 
         <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
           <TouchableOpacity
@@ -59,43 +75,35 @@ export default function Page() {
           </TouchableOpacity>
         </Animated.View>
       </View>
-    </ImageBackground>
+    {/* </ImageBackground> */}
+    {/* </LinearGradient> */}
+
+
+         <Image
+  source={require('../assets/mock.png')}
+  style={styles.mockImage}
+/>
+
+    
+    </View>
+    
   );
 }
 
 const styles = StyleSheet.create({
+
+
   background: {
     flex: 1,
     width: "100%",
     height: "100%",
-    justifyContent: "center",
     alignItems: "center",
+    flexDirection: 'row',
+  justifyContent: 'space-between',
+  paddingHorizontal: 32,
+  paddingHorizontal: '30%', 
   },
-  overlay: {
-    flex: 1,
-    width: "100%",
-    height: "100%",
-    backgroundColor: "rgba(0,0,0,0.5)",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 24,
-    position: "absolute",
-    top: 0,
-    left: 0,
-  },
-  glassContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)', // semi-transparent white
-    borderRadius: 25,
-    paddingVertical: 20,
-    paddingHorizontal: 40,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.4)', // subtle white border
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    marginBottom: 24,
-  },
+
   title: {
     fontSize: 36,
     fontWeight: "900",
@@ -110,17 +118,56 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     paddingHorizontal: 20,
   },
-  button: {
-    backgroundColor: "#1e90ff",
-    paddingVertical: 16,
-    paddingHorizontal: 48,
-    borderRadius: 30,
-    elevation: 3,
-  },
-  buttonText: {
-    color: "white",
-    fontSize: 22,
-    fontWeight: "bold",
-    letterSpacing: 1,
-  },
+button: {
+  backgroundColor: '#ffffff',
+  paddingVertical: 16,
+  paddingHorizontal: 36,
+  borderRadius: 999, // full pill shape
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  elevation: 4,
+  marginTop: 10,
+},
+
+buttonText: {
+  color: '#0066ee', // or '#007aff' based on your brand
+  fontSize: 16,
+  fontWeight: 'bold',
+},
+
+  heading: {
+  fontSize: 58,
+  fontWeight: 'bold',
+  color: '#fff',
+  textAlign: 'center',
+  marginBottom: 18,
+  lineHeight: 44,
+},
+
+highlight: {
+  backgroundColor: '#ffffff',
+  color: '#007aff', // or your new brand blue
+  paddingHorizontal: 4,
+  borderRadius: 4,
+},
+
+subtitle: {
+  fontSize: 20,
+  color: '#ffffff',
+  textAlign: 'center',
+  marginBottom: 10,
+  paddingHorizontal: 20,
+  opacity: 0.85,
+  marginTop: 8,
+},
+
+
+mockImage: {
+  width: 220,
+  height: 450,
+  resizeMode: 'contain',
+  marginTop: 30,
+},
+
 });
