@@ -1,46 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, Text, StyleSheet, Alert, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { createUserWithEmailAndPassword, signInWithCredential, GoogleAuthProvider, updateProfile } from 'firebase/auth';
+import React, { useState } from 'react';
+import {
+  View,
+  TextInput,
+  Button,
+  Text,
+  StyleSheet,
+  Alert,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../../firebase/config';
 import { useRouter } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
-import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
-import Constants from 'expo-constants';
-import { db } from '../../firebase/config'; // 👈 import Firestore
-import { doc, setDoc } from 'firebase/firestore'; // 👈 import methods
-
-
-WebBrowser.maybeCompleteAuthSession();
+import { db } from '../../firebase/config';
+import { doc, setDoc } from 'firebase/firestore';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { Picker } from '@react-native-picker/picker';
 
 export default function Signup() {
   const router = useRouter();
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: '231925583013-8nj0b0tm9qm87uii2luud7ksdfg8n569.apps.googleusercontent.com',
-    //iosClientId: 'YOUR_IOS_CLIENT_ID.apps.googleusercontent.com',
-    webClientId: '796056669419-t1cvpfhgd7nsta9qdhm05cm6ipnc1856.apps.googleusercontent.com',
-  });
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [birthday, setBirthday] = useState('');
+  const [birthday, setBirthday] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [gender, setGender] = useState('');
-
-  useEffect(() => {
-    if (response?.type === 'success') {
-      const { id_token } = response.authentication;
-      const credential = GoogleAuthProvider.credential(id_token);
-      signInWithCredential(auth, credential)
-        .then(() => {
-          Alert.alert('Signed in with Google!');
-          router.replace('/');
-        })
-        .catch((err) => Alert.alert('Google Sign-In Failed', err.message));
-    }
-  }, [response]);
 
   const handleSignup = async () => {
     if (password !== confirmPassword) {
@@ -48,28 +38,27 @@ export default function Signup() {
       return;
     }
     try {
-      const userCredential=await createUserWithEmailAndPassword(auth, email, password);
-      const user=userCredential.user;
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
       await updateProfile(user, {
-      displayName: firstName,
-    });
+        displayName: firstName,
+      });
 
-    await setDoc(doc(db, 'users', user.uid), {
-      uid: user.uid,
-      firstName: firstName,
-      lastName: lastName,
-      email: email,
-      birthday: birthday,
-      gender: gender,
-      createdAt: new Date(),
-    });
+      await setDoc(doc(db, 'users', user.uid), {
+        uid: user.uid,
+        firstName,
+        lastName,
+        email,
+        birthday: birthday.toISOString().split('T')[0], // saves as YYYY-MM-DD
+        gender,
+        createdAt: new Date(),
+      });
 
       Alert.alert('Account created!');
       router.replace('/(auth)/login');
     } catch (error) {
       Alert.alert('Signup Failed', error.message);
-      //router.replace('/')
     }
   };
 
@@ -104,18 +93,39 @@ export default function Signup() {
             keyboardType="email-address"
             autoCapitalize="none"
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Birthday (YYYY-MM-DD)"
-            onChangeText={setBirthday}
-            value={birthday}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Gender (optional)"
-            onChangeText={setGender}
-            value={gender}
-          />
+
+          {/* Birthday Picker */}
+          <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.input}>
+            <Text>{birthday ? birthday.toDateString() : 'Select Birthday'}</Text>
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={birthday}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={(event, selectedDate) => {
+                setShowDatePicker(Platform.OS === 'ios'); // stay open on iOS
+                if (selectedDate) {
+                  setBirthday(selectedDate);
+                }
+              }}
+            />
+          )}
+
+          {/* Gender Picker */}
+          <View style={[styles.input, { padding: 0 }]}>
+            <Picker
+              selectedValue={gender}
+              onValueChange={(itemValue) => setGender(itemValue)}
+              style={{ height: 50 }}
+            >
+              <Picker.Item label="Select Gender" value="" />
+              <Picker.Item label="Male" value="Male" />
+              <Picker.Item label="Female" value="Female" />
+              <Picker.Item label="Other" value="Other" />
+            </Picker>
+          </View>
+
           <TextInput
             style={styles.input}
             placeholder="Password"
@@ -130,13 +140,13 @@ export default function Signup() {
             onChangeText={setConfirmPassword}
             value={confirmPassword}
           />
+
           <Button title="Sign Up" onPress={handleSignup} />
 
           <View style={styles.socialRow}>
             <TouchableOpacity
-              onPress={() => promptAsync()}
+              onPress={() => Alert.alert('Google Sign-In not implemented')}
               style={styles.socialButton}
-              disabled={!request}
             >
               <FontAwesome name="google" size={32} color="#DB4437" />
             </TouchableOpacity>
