@@ -41,21 +41,23 @@ export default function HomeScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContainer}>
-      <Text style={styles.welcomeText}>Welcome Back 👋</Text>
+      <Text style={styles.welcomeText}>Welcome Back</Text>
       <Text style={styles.subtitle}>Stay on track with your fitness goals</Text>
 
       <View style={styles.gridContainer}>
-        {buttons.map(({ label, icon, screen }) => (
-          <TouchableOpacity
-            key={label}
-            style={styles.gridButton}
-            onPress={() => navigation.navigate(screen)}
-            activeOpacity={0.85}
-          >
-            <Image source={{ uri: icon }} style={styles.icon} />
-            <Text style={styles.buttonLabel}>{label}</Text>
-          </TouchableOpacity>
-        ))}
+      {buttons.map(({ label, icon, screen }) => (
+  <TouchableOpacity
+    key={label}
+    style={styles.gridButton}
+    onPress={() => navigation.navigate(screen)}
+    activeOpacity={0.85}
+  >
+    <Image source={typeof icon === 'string' ? { uri: icon } : icon} style={styles.icon} />
+<Text style={styles.buttonLabel}>{label}</Text>
+
+  </TouchableOpacity>
+))}
+
       </View>
     </ScrollView>
   );
@@ -64,7 +66,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F4F8FB', // light and clean
+    backgroundColor: 'white', // light and clean
   },
   scrollContainer: {
     padding: 20,
@@ -74,7 +76,7 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1e3a8a',
+    color: '#3b82f6',
     marginBottom: 8,
   },
   subtitle: {
@@ -92,11 +94,12 @@ const styles = StyleSheet.create({
   gridButton: {
     width: BUTTON_SIZE,
     height: BUTTON_SIZE,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#3b82f6',
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 15,
+    color: '#3b82f6',
 
     // iOS shadow
     shadowColor: '#000',
@@ -112,10 +115,11 @@ const styles = StyleSheet.create({
     height: BUTTON_SIZE * 0.4,
     marginBottom: 12,
   },
-  buttonLabel: {
-    color: '#111827',
-    fontWeight: '600',
-    fontSize: 14,
-    textAlign: 'center',
-  },
+buttonLabel: {
+  color: 'white',
+  fontWeight: '600',
+  fontSize: 14,
+  textAlign: 'center',
+},
+
 });

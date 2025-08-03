@@ -9,6 +9,7 @@ import {
   Animated,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function Page() {
   const router = useRouter();
@@ -49,24 +50,24 @@ export default function Page() {
       <View style={styles.cardRow}>
         <View style={styles.card}>
           <Image
-            source={require('../assets/female.png')}
+            source={require('../assets/log.jpg')}
             style={styles.cardImage}
           />
-          <Text style={styles.cardText}>Ready for some gains? Start tracking today!</Text>
+          <Text style={styles.cardText}>Log Sessions</Text>
         </View>
         <View style={styles.card}>
           <Image
-            source={require('../assets/female.png')}
+            source={require('../assets/graph.png')}
             style={styles.cardImage}
           />
-          <Text style={styles.cardText}>Log your lifts, monitor progress and improve.</Text>
+          <Text style={styles.cardText}>Visualize Progress</Text>
         </View>
         <View style={styles.card}>
           <Image
-            source={require('../assets/female.png')}
+            source={require('../assets/gym.jpg')}
             style={styles.cardImage}
           />
-          <Text style={styles.cardText}>Make consistent effort a lifestyle.</Text>
+          <Text style={styles.cardText}>Learn and Share</Text>
         </View>
       </View>
 
@@ -86,7 +87,11 @@ export default function Page() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#0066ee',
+    // royal blue
+    // backgroundColor: '#0066ee',
+    // gray
+    // backgroundColor: '#64748b',
+    backgroundColor: 			'#3b82f6',
     alignItems: 'center',
     padding: 24,
     paddingTop: 280,
@@ -111,14 +116,14 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   highlightAppName: {
-    backgroundColor: '#0066ee',
+    backgroundColor: '#3b82f6',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 5,
     alignSelf: 'center',
   },
   blue: {
-    color: '#0066ee',
+    color: '#3b82f6',
     fontWeight: 'bold',
     fontSize: 35,
     lineHeight: 34,
@@ -158,7 +163,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   buttonText: {
-    color: '#007aff',
+    color: '#3b82f6',
     fontWeight: 'bold',
     fontSize: 16,
   },
