@@ -42,6 +42,12 @@ export default function Login() {
             onChangeText={setPassword}
             value={password}
           />
+
+          {/* <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+  <Text style={styles.loginButtonText}>Login</Text>
+</TouchableOpacity> */}
+{/* change the login button */}
+
           <Button title="Login" onPress={handleLogin} />
           <TouchableOpacity onPress={() => router.push('/signup')}>
             <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
@@ -77,7 +83,7 @@ const styles = StyleSheet.create({
   },
   linkText: {
     marginTop: 20,
-    color: '#1e90ff',
+    color: '#007aff',
     textAlign: 'center',
   },
 });

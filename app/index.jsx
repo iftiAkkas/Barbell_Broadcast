@@ -1,18 +1,14 @@
-import { useRouter } from "expo-router";
-import React, { useRef, useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import {
-  Animated,
-  ImageBackground,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
   Image,
+  ScrollView,
+  Animated,
 } from "react-native";
-
-import { LinearGradient } from 'expo-linear-gradient';
-import { vi } from "date-fns/locale";
-
+import { useRouter } from "expo-router";
 
 export default function Page() {
   const router = useRouter();
@@ -22,152 +18,148 @@ export default function Page() {
     const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(scaleAnim, {
-          toValue: 1.1,
-          duration: 1000,
+          toValue: 1.05,
+          duration: 800,
           useNativeDriver: true,
         }),
         Animated.timing(scaleAnim, {
           toValue: 1,
-          duration: 1000,
+          duration: 800,
           useNativeDriver: true,
         }),
       ])
     );
     animation.start();
-
     return () => animation.stop();
   }, [scaleAnim]);
 
   return (
-    // <ImageBackground
-    //   source={require('../assets/fitness2.jpg')} // Replace with your cartoon bg image
-    //   style={styles.background}
-    //   resizeMode="cover"
-    //   blurRadius={4}
-    // >
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.welcome}>Welcome to</Text>
 
-//     <LinearGradient
-//   colors={['#007aff', '#a6d3fbff']}
-//   style={styles.background}
-// >
-
-
-
-     <View style={[styles.background, { backgroundColor: "#0066ee" }]}>
-
-      <View style={styles.overlay}>
-       
-          <Text style={styles.heading}>Barbell <Text style={styles.highlight}>Broadcast</Text></Text>
-
-
-        <Text style={styles.subtitle}>
-         Your gains deserve better than Notes app logs.
-        </Text>
-
-
-        <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => router.push("/(auth)/login")}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.buttonText}>Get Started</Text>
-          </TouchableOpacity>
-        </Animated.View>
+      <View style={styles.titleWrapper}>
+        <View style={styles.highlightAppName}>
+          <Text style={styles.appName}>Barbell</Text>
+        </View>
+        <View style={styles.highlight}>
+          <Text style={styles.blue}>Broadcast</Text>
+        </View>
       </View>
-    {/* </ImageBackground> */}
-    {/* </LinearGradient> */}
 
+      <View style={styles.cardRow}>
+        <View style={styles.card}>
+          <Image
+            source={require('../assets/female.png')}
+            style={styles.cardImage}
+          />
+          <Text style={styles.cardText}>Ready for some gains? Start tracking today!</Text>
+        </View>
+        <View style={styles.card}>
+          <Image
+            source={require('../assets/female.png')}
+            style={styles.cardImage}
+          />
+          <Text style={styles.cardText}>Log your lifts, monitor progress and improve.</Text>
+        </View>
+        <View style={styles.card}>
+          <Image
+            source={require('../assets/female.png')}
+            style={styles.cardImage}
+          />
+          <Text style={styles.cardText}>Make consistent effort a lifestyle.</Text>
+        </View>
+      </View>
 
-         <Image
-  source={require('../assets/mock.png')}
-  style={styles.mockImage}
-/>
-
-    
-    </View>
-    
+      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/(auth)/login")}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.buttonText}>Continue</Text>
+        </TouchableOpacity>
+      </Animated.View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-
-
-  background: {
-    flex: 1,
-    width: "100%",
-    height: "100%",
-    alignItems: "center",
+  container: {
+    flexGrow: 1,
+    backgroundColor: '#0066ee',
+    alignItems: 'center',
+    padding: 24,
+    paddingTop: 280,
+    paddingBottom: 40,
+  },
+  welcome: {
+    fontSize: 18,
+    color: 'white',
+    marginBottom: 6,
+  },
+  appName: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 35,
+    lineHeight: 34,
+  },
+  highlight: {
+    backgroundColor: 'white',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 5,
+    alignSelf: 'center',
+  },
+  highlightAppName: {
+    backgroundColor: '#0066ee',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 5,
+    alignSelf: 'center',
+  },
+  blue: {
+    color: '#0066ee',
+    fontWeight: 'bold',
+    fontSize: 35,
+    lineHeight: 34,
+  },
+  titleWrapper: {
     flexDirection: 'row',
-  justifyContent: 'space-between',
-  paddingHorizontal: 32,
-  paddingHorizontal: '30%', 
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 30,
   },
-
-  title: {
-    fontSize: 36,
-    fontWeight: "900",
-    color: "#fff",
-    textAlign: "center",
-    letterSpacing: 2,
+  cardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginBottom: 35,
+    flexWrap: 'wrap',
   },
-  subtitle: {
-    fontSize: 20,
-    color: "#fff",
-    textAlign: "center",
-    marginBottom: 40,
-    paddingHorizontal: 20,
+  card: {
+    width: 110,
+    alignItems: 'center',
   },
-button: {
-  backgroundColor: '#ffffff',
-  paddingVertical: 16,
-  paddingHorizontal: 36,
-  borderRadius: 999, // full pill shape
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'center',
-  elevation: 4,
-  marginTop: 10,
-},
-
-buttonText: {
-  color: '#0066ee', // or '#007aff' based on your brand
-  fontSize: 16,
-  fontWeight: 'bold',
-},
-
-  heading: {
-  fontSize: 58,
-  fontWeight: 'bold',
-  color: '#fff',
-  textAlign: 'center',
-  marginBottom: 18,
-  lineHeight: 44,
-},
-
-highlight: {
-  backgroundColor: '#ffffff',
-  color: '#007aff', // or your new brand blue
-  paddingHorizontal: 4,
-  borderRadius: 4,
-},
-
-subtitle: {
-  fontSize: 20,
-  color: '#ffffff',
-  textAlign: 'center',
-  marginBottom: 10,
-  paddingHorizontal: 20,
-  opacity: 0.85,
-  marginTop: 8,
-},
-
-
-mockImage: {
-  width: 220,
-  height: 450,
-  resizeMode: 'contain',
-  marginTop: 30,
-},
-
+  cardImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  cardText: {
+    fontSize: 12,
+    textAlign: 'center',
+    color: 'white',
+  },
+  button: {
+    backgroundColor: 'white',
+    paddingVertical: 14,
+    paddingHorizontal: 60,
+    borderRadius: 6,
+  },
+  buttonText: {
+    color: '#007aff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
 });
