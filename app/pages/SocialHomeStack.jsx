@@ -1,10 +1,8 @@
-// navigation/HomeStack.js
-import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import SocialHomeScreen from './SocialHome';
+import React from 'react';
+import { Text } from 'react-native';
 import AddPost from './AddPost';
+import SocialHomeScreen from './SocialHome';
 
 const Stack = createStackNavigator();
 
@@ -14,46 +12,52 @@ const HomeStack = () => {
       <Stack.Screen
         name="HomeMain"
         component={SocialHomeScreen}
-        options={({ navigation }) => ({
+        options={{
+          // ✅ Use a custom headerTitle component to ensure perfect centering
           headerTitle: () => (
-            <Text style={styles.headerTitle}>Create Post</Text>
-          ),
-          headerLeft: () => (
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => navigation.navigate('AddPost')}
-              activeOpacity={0.7}
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: 'bold',
+                color: '#3b82f6',
+                textAlign: 'right',
+                width: '100%',
+              }}
             >
-              <Ionicons name="add-circle-outline" size={28} color="#00796b" />
-            </TouchableOpacity>
+              News Feed
+            </Text>
           ),
-          headerBackVisible: false, // ✅ Hides the back button
+          headerLeft: () => null, 
+          headerTitleAlign: 'center', // Still keep this
+          headerBackVisible: false,
           headerStyle: {
             backgroundColor: '#fff',
             elevation: 3,
             shadowOpacity: 0.2,
+            shadowOffset: { width: 0, height: 2 },
+            shadowRadius: 4,
           },
-        })}
+        }}
       />
       <Stack.Screen
         name="AddPost"
         component={AddPost}
-        options={{ title: 'Back' }}
+        options={{
+          title: 'Back',
+          headerTitleAlign: 'center',
+          headerTitleStyle: {
+            fontSize: 18,
+            color: '#00796b',
+          },
+          headerStyle: {
+            backgroundColor: '#fff',
+            elevation: 2,
+            shadowOpacity: 0.1,
+          },
+        }}
       />
     </Stack.Navigator>
   );
 };
-
-const styles = StyleSheet.create({
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#00796b',
-  },
-  addButton: {
-    marginLeft: 15,
-    
-  },
-});
 
 export default HomeStack;
