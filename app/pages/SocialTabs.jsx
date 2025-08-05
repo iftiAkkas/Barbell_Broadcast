@@ -17,8 +17,8 @@ export default function SocialTabs() {
         tabBarStyle: {
           position: 'absolute',
           backgroundColor: '#fff',
-          height: 80, // ⬆️ Increased height
-          paddingBottom: Platform.OS === 'ios' ? 20 : 10, // iOS safe padding
+          height: 80,
+          paddingBottom: Platform.OS === 'ios' ? 20 : 10,
           borderTopWidth: 0,
           elevation: 5,
         },
@@ -32,8 +32,12 @@ export default function SocialTabs() {
         name="Home"
         component={HomeStack}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons
+              name={focused ? 'home' : 'home-outline'}
+              size={size}
+              color={color}
+            />
           ),
           tabBarLabel: 'Home',
         }}
@@ -44,8 +48,8 @@ export default function SocialTabs() {
         component={AddPost}
         options={{
           tabBarButton: (props) => <FloatingAddButton {...props} />,
-          tabBarLabel: () => null, // Hide label under FAB
-          tabBarStyle: { display: 'none' }, 
+          tabBarLabel: () => null,
+          tabBarStyle: { display: 'none' },
         }}
       />
 
@@ -53,8 +57,12 @@ export default function SocialTabs() {
         name="Messages"
         component={SocialMessagesTabs}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="chatbubble-outline" size={size} color={color} />
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons
+              name={focused ? 'chatbubble' : 'chatbubble-outline'}
+              size={size}
+              color={color}
+            />
           ),
           tabBarLabel: 'Messages',
         }}
@@ -80,7 +88,7 @@ function FloatingAddButton({ onPress }) {
 const styles = StyleSheet.create({
   fabWrapper: {
     position: 'absolute',
-    top: -30, // ⬆️ Ensures it appears above tab bar
+    top: -30,
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',

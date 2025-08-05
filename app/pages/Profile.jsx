@@ -1,19 +1,20 @@
 // src/screens/Profile.js
+import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Modal,
   StyleSheet,
   Text,
-  View,
-  Image,
-  TouchableOpacity,
-  Alert,
-  Modal,
   TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { auth, db } from '../../firebase/config';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import * as ImagePicker from 'expo-image-picker';
-import { Ionicons } from '@expo/vector-icons';
 
 // Upload image to Cloudinary
 const uploadImageToCloudinary = async (uri) => {
@@ -166,7 +167,12 @@ export default function Profile() {
     return require('../../assets/man.png');
   };
 
-  if (!userData) return <Text style={{ textAlign: 'center', marginTop: 20 }}>Loading...</Text>;
+  if (!userData)
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007bff" />
+      </View>
+    );
 
   return (
     <View style={styles.container}>
@@ -177,7 +183,9 @@ export default function Profile() {
         />
       </TouchableOpacity>
 
-      <Text style={styles.name}>{userData.firstName} {userData.lastName}</Text>
+      <Text style={styles.name}>
+        {userData.firstName} {userData.lastName}
+      </Text>
       <Text style={styles.email}>{userData.email}</Text>
 
       <TouchableOpacity style={styles.button} onPress={chooseImageSource}>
@@ -232,6 +240,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
     paddingHorizontal: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   profileImage: {
     width: 120,
