@@ -1,10 +1,10 @@
 // navigation/HomeStack.js
-import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import SocialHomeScreen from './SocialHome';
+import { createStackNavigator } from '@react-navigation/stack';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 import AddPost from './AddPost';
+import SocialHomeScreen from './SocialHome';
 
 const Stack = createStackNavigator();
 
@@ -16,7 +16,13 @@ const HomeStack = () => {
         component={SocialHomeScreen}
         options={({ navigation }) => ({
           headerTitle: () => (
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => navigation.navigate('AddPost')}
+              activeOpacity={0.7}
+            >
             <Text style={styles.headerTitle}>Create Post</Text>
+            </TouchableOpacity>
           ),
           headerLeft: () => (
             <TouchableOpacity
