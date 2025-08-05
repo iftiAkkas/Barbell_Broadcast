@@ -1,25 +1,25 @@
-import React, { useEffect, useState, useRef } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
+  addDoc,
+  collection,
+  getDocs,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+} from 'firebase/firestore';
+import React, { useEffect, useRef, useState } from 'react';
+import {
   FlatList,
-  TextInput,
-  TouchableOpacity,
   Image,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import {
-  collection,
-  addDoc,
-  query,
-  orderBy,
-  onSnapshot,
-  serverTimestamp,
-  getDocs,
-} from 'firebase/firestore';
 import { auth, db } from '../../firebase/config';
 
 // Import local image as fallback
@@ -129,7 +129,7 @@ export default function CommunityMessages() {
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 80}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 30 : 80}
       >
         <View style={styles.container}>
           <FlatList
@@ -137,9 +137,10 @@ export default function CommunityMessages() {
             data={messages}
             renderItem={renderItem}
             keyExtractor={(item) => item.id}
-            contentContainerStyle={{ padding: 12 }}
+            contentContainerStyle={{ padding: 12, paddingBottom: 0 }}
             onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
             keyboardShouldPersistTaps="handled"
+            style={{ flex: 1 }}
           />
           <View style={styles.inputContainer}>
             <TextInput
@@ -164,6 +165,7 @@ const styles = StyleSheet.create({
   keyboardAvoid: { flex: 1 },
   container: {
     flex: 1,
+    marginBottom: 70,
   },
   messageContainer: {
     flexDirection: 'row',
