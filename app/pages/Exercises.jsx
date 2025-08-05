@@ -1,10 +1,10 @@
 import React from 'react';
-import { SafeAreaView, StyleSheet, Text, View, StatusBar } from 'react-native';
+import { SafeAreaView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import BodyParts from '../components/BodyParts';
 import ImageSlider from '../components/ImageSlider';
 import ProfileImage from '../components/profileImage';
-
+import { sliderImages } from '../constants/index';
 export default function Exercises() {
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -19,7 +19,7 @@ export default function Exercises() {
       </View>
 
       <View style={styles.sliderContainer}>
-        <ImageSlider />
+        <ImageSlider images={sliderImages}/>
       </View>
 
       <View style={styles.bodyPartsContainer}>

@@ -1,15 +1,14 @@
+import { useRouter } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import {
+  Animated,
+  Image,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  Image,
-  ScrollView,
-  Animated,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { LinearGradient } from 'expo-linear-gradient';
 
 export default function Page() {
   const router = useRouter();

@@ -1,29 +1,28 @@
+import PropTypes from 'prop-types';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
   Image,
   StyleSheet,
-  View,
+  View
 } from 'react-native';
-import { sliderImages } from '../constants/index';
 
 const { width } = Dimensions.get('window');
 const ITEM_WIDTH = width * 0.8;
 const SPACER_WIDTH = (width - ITEM_WIDTH) / 2;
 const AUTO_SCROLL_INTERVAL = 4000; // 4 seconds
 
-export default function ImageSlider() {
+export default function ImageSlider({ images }) {
   const scrollX = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef(null);
+  const [currentIndex, setCurrentIndex] = useState(1);
 
   const dataWithSpacers = [
     { key: 'left-spacer' },
-    ...sliderImages.map((img, i) => ({ key: `img-${i}`, image: img })),
+    ...images.map((img, i) => ({ key: `img-${i}`, image: img })),
     { key: 'right-spacer' },
   ];
-
-  const [currentIndex, setCurrentIndex] = useState(1);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -36,7 +35,7 @@ export default function ImageSlider() {
     }, AUTO_SCROLL_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [currentIndex]);
+  }, [currentIndex, dataWithSpacers.length]);
 
   const onScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { x: scrollX } } }],
@@ -45,7 +44,7 @@ export default function ImageSlider() {
       listener: (event) => {
         const offsetX = event.nativeEvent.contentOffset.x;
         const index = Math.round(offsetX / ITEM_WIDTH);
-        if (index >= 1 && index <= sliderImages.length) {
+        if (index >= 1 && index <= images.length) {
           setCurrentIndex(index);
         }
       },
@@ -72,7 +71,9 @@ export default function ImageSlider() {
         index,
       })}
       renderItem={({ item, index }) => {
-        if (!item.image) return <View style={{ width: SPACER_WIDTH }} />;
+        if (!item.image) {
+          return <View style={{ width: SPACER_WIDTH }} />;
+        }
 
         const inputRange = [
           (index - 2) * ITEM_WIDTH,
@@ -109,6 +110,10 @@ export default function ImageSlider() {
     />
   );
 }
+
+ImageSlider.propTypes = {
+  images: PropTypes.arrayOf(PropTypes.any).isRequired,
+};
 
 const styles = StyleSheet.create({
   itemContainer: {
