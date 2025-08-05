@@ -45,7 +45,7 @@ export default function ProfileImage({ onPress, big }) {
         source={
           profileImage
             ? { uri: profileImage }
-            : require('../../assets/avatar.png')
+            : require('../../assets/man.png')
         }
         style={big ? styles.bigImage : styles.image}
       />
