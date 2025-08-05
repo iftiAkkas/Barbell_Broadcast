@@ -1,12 +1,18 @@
 export const rapidApiKey = 'b74b207065msh87173828786bdddp17b9efjsn7f2ffd41bffd';
 
 export const sliderImages = [
-    require('../../assets/slide1.png'),
-    require('../../assets/slide2.png'),
-    require('../../assets/slide3.png'),
-    require('../../assets/slide4.png'),
-    require('../../assets/slide5.png'),
+    {image: require('../../assets/slide1.png')},
+    {image: require('../../assets/slide2.png')},
+    {image: require('../../assets/slide3.png')},
+    {image: require('../../assets/slide4.png')},
+    {image: require('../../assets/slide5.png')},
 ]
+
+export const features = [
+  { image: require('../../assets/log.jpg'), label: 'Log Sessions' },
+  { image: require('../../assets/graph.png'), label: 'Visualize Progress' },
+  { image: require('../../assets/gym.jpg'), label: 'Learn and Share' },
+];
 
 export const bodyParts = [
     {

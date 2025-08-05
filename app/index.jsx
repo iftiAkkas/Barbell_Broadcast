@@ -2,13 +2,14 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import {
   Animated,
-  Image,
-  ScrollView,
+  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import ImageSlider from "../app/components/ImageSlider";
+import { features } from "./constants/index";
 
 export default function Page() {
   const router = useRouter();
@@ -34,136 +35,108 @@ export default function Page() {
   }, [scaleAnim]);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.welcome}>Welcome to</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <View>
+          <Text style={styles.welcome}>Welcome to</Text>
 
-      <View style={styles.titleWrapper}>
-        <View style={styles.highlightAppName}>
-          <Text style={styles.appName}>Barbell</Text>
+          <View style={styles.titleWrapper}>
+            <View style={styles.highlightAppName}>
+              <Text style={styles.appName}>Barbell</Text>
+            </View>
+            <View style={styles.highlight}>
+              <Text style={styles.blue}>Broadcast</Text>
+            </View>
+          </View>
+
+          <View style={styles.sliderWrapper}>
+            <ImageSlider images={features} />
+          </View>
         </View>
-        <View style={styles.highlight}>
-          <Text style={styles.blue}>Broadcast</Text>
-        </View>
+
+        <Animated.View style={[styles.buttonWrapper, { transform: [{ scale: scaleAnim }] }]}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => router.push("/(auth)/login")}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.buttonText}>Continue</Text>
+          </TouchableOpacity>
+        </Animated.View>
       </View>
-
-      <View style={styles.cardRow}>
-        <View style={styles.card}>
-          <Image
-            source={require('../assets/log.jpg')}
-            style={styles.cardImage}
-          />
-          <Text style={styles.cardText}>Log Sessions</Text>
-        </View>
-        <View style={styles.card}>
-          <Image
-            source={require('../assets/graph.png')}
-            style={styles.cardImage}
-          />
-          <Text style={styles.cardText}>Visualize Progress</Text>
-        </View>
-        <View style={styles.card}>
-          <Image
-            source={require('../assets/gym.jpg')}
-            style={styles.cardImage}
-          />
-          <Text style={styles.cardText}>Learn and Share</Text>
-        </View>
-      </View>
-
-      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => router.push("/(auth)/login")}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.buttonText}>Continue</Text>
-        </TouchableOpacity>
-      </Animated.View>
-    </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#3b82f6",
+  },
   container: {
-    flexGrow: 1,
-    // royal blue
-    // backgroundColor: '#0066ee',
-    // gray
-    // backgroundColor: '#64748b',
-    backgroundColor: 			'#3b82f6',
-    alignItems: 'center',
+    flex: 1,
+    backgroundColor: "#3b82f6",
+    justifyContent: "space-between",
     padding: 24,
-    paddingTop: 280,
-    paddingBottom: 40,
+    paddingTop: 100,
   },
   welcome: {
     fontSize: 18,
-    color: 'white',
+    color: "white",
+    textAlign: "center",
     marginBottom: 6,
+    marginTop: 40,
   },
   appName: {
-    color: 'white',
-    fontWeight: 'bold',
+    color: "white",
+    fontWeight: "bold",
     fontSize: 35,
-    lineHeight: 34,
+    lineHeight: 40,
   },
   highlight: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 5,
-    alignSelf: 'center',
+    alignSelf: "center",
+    marginLeft: 8,
   },
   highlightAppName: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: "#3b82f6",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 5,
-    alignSelf: 'center',
+    alignSelf: "center",
   },
   blue: {
-    color: '#3b82f6',
-    fontWeight: 'bold',
+    color: "#3b82f6",
+    fontWeight: "bold",
     fontSize: 35,
-    lineHeight: 34,
+    lineHeight: 40,
   },
   titleWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 40,
+  },
+  sliderWrapper: {
+    marginTop: 12,
+    marginBottom: 20,
+  },
+  buttonWrapper: {
+    alignItems: "center",
     marginBottom: 30,
   },
-  cardRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-    marginBottom: 35,
-    flexWrap: 'wrap',
-  },
-  card: {
-    width: 110,
-    alignItems: 'center',
-  },
-  cardImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-  cardText: {
-    fontSize: 12,
-    textAlign: 'center',
-    color: 'white',
-  },
   button: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     paddingVertical: 14,
     paddingHorizontal: 60,
     borderRadius: 6,
   },
   buttonText: {
-    color: '#3b82f6',
-    fontWeight: 'bold',
-    fontSize: 16,
+    color: "#3b82f6",
+    fontWeight: "bold",
+    fontSize: 20,
   },
 });
