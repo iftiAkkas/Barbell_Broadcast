@@ -15,25 +15,18 @@ const HomeStack = () => {
         name="HomeMain"
         component={SocialHomeScreen}
         options={({ navigation }) => ({
-          headerTitle: () => (
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => navigation.navigate('AddPost')}
-              activeOpacity={0.7}
-            >
-            <Text style={styles.headerTitle}>Create Post</Text>
-            </TouchableOpacity>
-          ),
           headerLeft: () => (
             <TouchableOpacity
-              style={styles.addButton}
+              style={styles.headerButton}
               onPress={() => navigation.navigate('AddPost')}
               activeOpacity={0.7}
             >
-              <Ionicons name="add-circle-outline" size={28} color="#00796b" />
+              <Ionicons name="add-circle-outline" size={22} color="#00796b" />
+              <Text style={styles.headerText}>Create Post</Text>
             </TouchableOpacity>
           ),
-          headerBackVisible: false, // ✅ Hides the back button
+          headerBackVisible: false,
+          headerTitle: '', // No other title
           headerStyle: {
             backgroundColor: '#fff',
             elevation: 3,
@@ -51,14 +44,16 @@ const HomeStack = () => {
 };
 
 const styles = StyleSheet.create({
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#00796b',
-  },
-  addButton: {
+  headerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginLeft: 15,
-    
+  },
+  headerText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#00796b',
+    marginLeft: 6,
   },
 });
 
