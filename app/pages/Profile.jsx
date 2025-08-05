@@ -45,7 +45,6 @@ const uploadImageToCloudinary = async (uri) => {
 export default function Profile() {
   const [userData, setUserData] = useState(null);
   const [profilePic, setProfilePic] = useState(null);
-
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [newName, setNewName] = useState('');
 
@@ -162,12 +161,29 @@ export default function Profile() {
   };
 
   const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      router.replace('/'); // navigate to index.jsx
-    } catch (error) {
-      Alert.alert('Logout Failed', error.message);
-    }
+    Alert.alert(
+      'Confirm Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut(auth);
+              router.replace('/');
+            } catch (error) {
+              Alert.alert('Logout Failed', error.message);
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
   const getDefaultIcon = () => {
@@ -197,18 +213,20 @@ export default function Profile() {
       </Text>
       <Text style={styles.email}>{userData.email}</Text>
 
-      <TouchableOpacity style={styles.button} onPress={chooseImageSource}>
-        <Ionicons name="camera" size={20} color="#fff" />
-        <Text style={styles.buttonText}>Change Profile Picture</Text>
-      </TouchableOpacity>
+      <View style={styles.gridRow}>
+        <TouchableOpacity style={styles.gridButton} onPress={chooseImageSource}>
+          <Ionicons name="camera" size={20} color="#fff" />
+          <Text style={styles.buttonText}>Change Picture</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button} onPress={handleChangeUsername}>
-        <Ionicons name="create-outline" size={20} color="#fff" />
-        <Text style={styles.buttonText}>Change Username</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.gridButton} onPress={handleChangeUsername}>
+          <Ionicons name="create-outline" size={20} color="#fff" />
+          <Text style={styles.buttonText}>Change Name</Text>
+        </TouchableOpacity>
+      </View>
 
       <TouchableOpacity
-        style={[styles.button, { backgroundColor: '#dc3545' }]}
+        style={[styles.button, { backgroundColor: '#dc3545', marginTop: 24, width: '100%' }]}
         onPress={handleLogout}
       >
         <Ionicons name="log-out-outline" size={20} color="#fff" />
@@ -267,31 +285,62 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    marginBottom: 16,
+    marginBottom: 24,
     backgroundColor: '#ddd',
   },
   name: {
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: 'bold',
+    marginBottom: 4,
   },
   email: {
     fontSize: 16,
     color: 'gray',
-    marginBottom: 24,
+    marginBottom: 32,
+  },
+  gridRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  gridButton: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: '#007bff',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 5,
+
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
   },
   button: {
     flexDirection: 'row',
     backgroundColor: '#007bff',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 25,
     alignItems: 'center',
-    marginVertical: 5,
+    justifyContent: 'center',
+    marginVertical: 8,
+
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
   },
   buttonText: {
     color: '#fff',
-    marginLeft: 8,
-    fontSize: 16,
+    marginLeft: 12,
+    fontSize: 18,
+    fontWeight: '600',
   },
   modalOverlay: {
     flex: 1,
@@ -303,20 +352,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     width: '85%',
     padding: 20,
-    borderRadius: 10,
-    elevation: 5,
+    borderRadius: 15,
+    elevation: 10,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   modalInput: {
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 16,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 20,
+    fontSize: 16,
   },
   modalButtons: {
     flexDirection: 'row',
