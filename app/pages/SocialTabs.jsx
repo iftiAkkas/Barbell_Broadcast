@@ -45,6 +45,7 @@ export default function SocialTabs() {
         options={{
           tabBarButton: (props) => <FloatingAddButton {...props} />,
           tabBarLabel: () => null, // Hide label under FAB
+          tabBarStyle: { display: 'none' }, 
         }}
       />
 
