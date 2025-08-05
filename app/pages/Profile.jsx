@@ -15,6 +15,8 @@ import {
   View,
 } from 'react-native';
 import { auth, db } from '../../firebase/config';
+import { signOut } from 'firebase/auth';
+import { router } from 'expo-router';
 
 // Upload image to Cloudinary
 const uploadImageToCloudinary = async (uri) => {
@@ -24,8 +26,8 @@ const uploadImageToCloudinary = async (uri) => {
     type: 'image/jpeg',
     name: `upload_${Date.now()}.jpg`,
   });
-  data.append('upload_preset', 'barbellblabla'); // your Cloudinary preset
-  data.append('cloud_name', 'dumsmhrum'); // your Cloudinary cloud name
+  data.append('upload_preset', 'barbellblabla');
+  data.append('cloud_name', 'dumsmhrum');
 
   const response = await fetch('https://api.cloudinary.com/v1_1/dumsmhrum/image/upload', {
     method: 'POST',
@@ -44,7 +46,6 @@ export default function Profile() {
   const [userData, setUserData] = useState(null);
   const [profilePic, setProfilePic] = useState(null);
 
-  // State for username modal
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [newName, setNewName] = useState('');
 
@@ -134,7 +135,6 @@ export default function Profile() {
     }
   };
 
-  // Replace Alert.prompt with modal
   const handleChangeUsername = () => {
     setNewName('');
     setShowUsernameModal(true);
@@ -158,6 +158,15 @@ export default function Profile() {
       fetchUserData();
     } catch (error) {
       Alert.alert('Error', 'Failed to update username');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.replace('/'); // navigate to index.jsx
+    } catch (error) {
+      Alert.alert('Logout Failed', error.message);
     }
   };
 
@@ -196,6 +205,14 @@ export default function Profile() {
       <TouchableOpacity style={styles.button} onPress={handleChangeUsername}>
         <Ionicons name="create-outline" size={20} color="#fff" />
         <Text style={styles.buttonText}>Change Username</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.button, { backgroundColor: '#dc3545' }]}
+        onPress={handleLogout}
+      >
+        <Ionicons name="log-out-outline" size={20} color="#fff" />
+        <Text style={styles.buttonText}>Logout</Text>
       </TouchableOpacity>
 
       {/* Username change modal */}
