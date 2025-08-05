@@ -1,13 +1,15 @@
 import { useRouter } from "expo-router";
-import React, { useRef, useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   Animated,
-  ImageBackground,
+  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import ImageSlider from "../app/components/ImageSlider";
+import { features } from "./constants/index";
 
 export default function Page() {
   const router = useRouter();
@@ -17,110 +19,124 @@ export default function Page() {
     const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(scaleAnim, {
-          toValue: 1.1,
-          duration: 1000,
+          toValue: 1.05,
+          duration: 800,
           useNativeDriver: true,
         }),
         Animated.timing(scaleAnim, {
           toValue: 1,
-          duration: 1000,
+          duration: 800,
           useNativeDriver: true,
         }),
       ])
     );
     animation.start();
-
     return () => animation.stop();
   }, [scaleAnim]);
 
   return (
-    <ImageBackground
-      source={require('../assets/fitness2.jpg')} // Replace with your cartoon bg image
-      style={styles.background}
-      resizeMode="cover"
-      blurRadius={4}
-    >
-      <View style={styles.overlay}>
-        <View style={styles.glassContainer}>
-          <Text style={styles.title}>Barbell Broadcast</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <View>
+          <Text style={styles.welcome}>Welcome to</Text>
+
+          <View style={styles.titleWrapper}>
+            <View style={styles.highlightAppName}>
+              <Text style={styles.appName}>Barbell</Text>
+            </View>
+            <View style={styles.highlight}>
+              <Text style={styles.blue}>Broadcast</Text>
+            </View>
+          </View>
+
+          <View style={styles.sliderWrapper}>
+            <ImageSlider images={features} />
+          </View>
         </View>
 
-        <Text style={styles.subtitle}>
-          Track your workouts, progress, and stay motivated!
-        </Text>
-
-        <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        <Animated.View style={[styles.buttonWrapper, { transform: [{ scale: scaleAnim }] }]}>
           <TouchableOpacity
             style={styles.button}
             onPress={() => router.push("/(auth)/login")}
             activeOpacity={0.8}
           >
-            <Text style={styles.buttonText}>Get Started</Text>
+            <Text style={styles.buttonText}>Continue</Text>
           </TouchableOpacity>
         </Animated.View>
       </View>
-    </ImageBackground>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  background: {
+  safeArea: {
     flex: 1,
-    width: "100%",
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: "#3b82f6",
   },
-  overlay: {
+  container: {
     flex: 1,
-    width: "100%",
-    height: "100%",
-    backgroundColor: "rgba(0,0,0,0.5)",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: "#3b82f6",
+    justifyContent: "space-between",
     padding: 24,
-    position: "absolute",
-    top: 0,
-    left: 0,
+    paddingTop: 100,
   },
-  glassContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)', // semi-transparent white
-    borderRadius: 25,
-    paddingVertical: 20,
-    paddingHorizontal: 40,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.4)', // subtle white border
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 36,
-    fontWeight: "900",
-    color: "#fff",
+  welcome: {
+    fontSize: 18,
+    color: "white",
     textAlign: "center",
-    letterSpacing: 2,
+    marginBottom: 6,
+    marginTop: 40,
   },
-  subtitle: {
-    fontSize: 20,
-    color: "#fff",
-    textAlign: "center",
+  appName: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 35,
+    lineHeight: 40,
+  },
+  highlight: {
+    backgroundColor: "white",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 5,
+    alignSelf: "center",
+    marginLeft: 8,
+  },
+  highlightAppName: {
+    backgroundColor: "#3b82f6",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 5,
+    alignSelf: "center",
+  },
+  blue: {
+    color: "#3b82f6",
+    fontWeight: "bold",
+    fontSize: 35,
+    lineHeight: 40,
+  },
+  titleWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 40,
-    paddingHorizontal: 20,
+  },
+  sliderWrapper: {
+    marginTop: 12,
+    marginBottom: 20,
+  },
+  buttonWrapper: {
+    alignItems: "center",
+    marginBottom: 30,
   },
   button: {
-    backgroundColor: "#1e90ff",
-    paddingVertical: 16,
-    paddingHorizontal: 48,
-    borderRadius: 30,
-    elevation: 3,
+    backgroundColor: "white",
+    paddingVertical: 14,
+    paddingHorizontal: 60,
+    borderRadius: 6,
   },
   buttonText: {
-    color: "white",
-    fontSize: 22,
+    color: "#3b82f6",
     fontWeight: "bold",
-    letterSpacing: 1,
+    fontSize: 20,
   },
 });

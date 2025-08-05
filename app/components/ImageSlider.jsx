@@ -1,42 +1,48 @@
+import PropTypes from 'prop-types';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
   Image,
   StyleSheet,
+  Text,
   View,
 } from 'react-native';
-import { sliderImages } from '../constants/index';
 
 const { width } = Dimensions.get('window');
 const ITEM_WIDTH = width * 0.8;
 const SPACER_WIDTH = (width - ITEM_WIDTH) / 2;
-const AUTO_SCROLL_INTERVAL = 4000; // 4 seconds
+const AUTO_SCROLL_INTERVAL = 4000;
 
-export default function ImageSlider() {
+export default function ImageSlider({ images }) {
   const scrollX = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef(null);
+  const [currentIndex, setCurrentIndex] = useState(1);
 
   const dataWithSpacers = [
     { key: 'left-spacer' },
-    ...sliderImages.map((img, i) => ({ key: `img-${i}`, image: img })),
+    ...images.map((item, index) => ({
+      key: `img-${index}`,
+      image: item.image,
+      label: item.label || '',
+    })),
     { key: 'right-spacer' },
   ];
 
-  const [currentIndex, setCurrentIndex] = useState(1);
-
   useEffect(() => {
     const interval = setInterval(() => {
-      let nextIndex = currentIndex + 1;
-      if (nextIndex >= dataWithSpacers.length - 1) {
-        nextIndex = 1;
-      }
-      flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
-      setCurrentIndex(nextIndex);
+      setCurrentIndex((prevIndex) => {
+        let nextIndex = prevIndex + 1;
+        if (nextIndex >= dataWithSpacers.length - 1) {
+          nextIndex = 1;
+        }
+        flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
+        return nextIndex;
+      });
     }, AUTO_SCROLL_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [currentIndex]);
+  }, []);
 
   const onScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { x: scrollX } } }],
@@ -45,7 +51,7 @@ export default function ImageSlider() {
       listener: (event) => {
         const offsetX = event.nativeEvent.contentOffset.x;
         const index = Math.round(offsetX / ITEM_WIDTH);
-        if (index >= 1 && index <= sliderImages.length) {
+        if (index >= 1 && index <= images.length) {
           setCurrentIndex(index);
         }
       },
@@ -72,7 +78,9 @@ export default function ImageSlider() {
         index,
       })}
       renderItem={({ item, index }) => {
-        if (!item.image) return <View style={{ width: SPACER_WIDTH }} />;
+        if (!item.image) {
+          return <View style={{ width: SPACER_WIDTH }} />;
+        }
 
         const inputRange = [
           (index - 2) * ITEM_WIDTH,
@@ -92,17 +100,22 @@ export default function ImageSlider() {
           extrapolate: 'clamp',
         });
 
+        const imageStyle = item.label ? styles.imageWithLabel : styles.imageFull;
+        const itemStyle = item.label ? styles.itemContainer : { ...styles.itemContainer, height: 220 };
         return (
           <Animated.View
             style={[
-              styles.itemContainer,
+              itemStyle,
               {
                 transform: [{ scale }],
                 opacity,
               },
             ]}
           >
-            <Image source={item.image} style={styles.image} />
+            <Image source={item.image} style={imageStyle} resizeMode="cover" />
+            {item.label ? (
+              <Text style={styles.labelText}>{item.label}</Text>
+            ) : null}
           </Animated.View>
         );
       }}
@@ -110,23 +123,49 @@ export default function ImageSlider() {
   );
 }
 
+ImageSlider.propTypes = {
+  images: PropTypes.arrayOf(
+    PropTypes.shape({
+      image: PropTypes.oneOfType([
+        PropTypes.number, // require(...)
+        PropTypes.shape({ uri: PropTypes.string }),
+      ]).isRequired,
+      label: PropTypes.string,
+    })
+  ).isRequired,
+};
+
 const styles = StyleSheet.create({
   itemContainer: {
     width: ITEM_WIDTH,
-    height: 200,
+    height: 320,
     borderRadius: 16,
     overflow: 'hidden',
     marginHorizontal: 10,
-    backgroundColor: '#fff',
+    backgroundColor: '#3b82f6',
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
+    alignItems: 'center',
   },
-  image: {
+  imageWithLabel: {
     width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
+    height: 280,
+    borderRadius: 16,
+  },
+  imageFull: {
+    width: '100%',
+    height: 220,
+    borderRadius: 16,
+  },
+  labelText: {
+    paddingTop: 16,
+    paddingBottom: 12,
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'white',
+    textAlign: 'center',
   },
 });
