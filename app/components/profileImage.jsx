@@ -1,39 +1,55 @@
-import React, { useEffect, useState } from 'react';
-import { Image, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import {
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
 import { getAuth } from 'firebase/auth';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
 import app from '../../firebase/config';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function ProfileImage({ onPress, big }) {
   const [profileImage, setProfileImage] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchProfileImage() {
-      try {
-        const auth = getAuth(app);
-        const user = auth.currentUser;
-        if (!user) return;
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
 
-        const db = getFirestore(app);
-        const userDocRef = doc(db, 'users', user.uid);
-        const userDocSnap = await getDoc(userDocRef);
+      const fetchProfileImage = async () => {
+        try {
+          const auth = getAuth(app);
+          const user = auth.currentUser;
+          if (!user) return;
 
-        if (userDocSnap.exists()) {
-          const data = userDocSnap.data();
-          if (data.profileImage) {
-            setProfileImage(data.profileImage);
+          const db = getFirestore(app);
+          const userDocRef = doc(db, 'users', user.uid);
+          const userDocSnap = await getDoc(userDocRef);
+
+          if (userDocSnap.exists() && isActive) {
+            const data = userDocSnap.data();
+            if (data.profileImage) {
+              setProfileImage(data.profileImage);
+            } else {
+              setProfileImage(null);
+            }
           }
+        } catch (error) {
+          console.log('Error fetching profile image:', error);
+        } finally {
+          if (isActive) setLoading(false);
         }
-      } catch (error) {
-        console.log('Error fetching profile image:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
+      };
 
-    fetchProfileImage();
-  }, []);
+      fetchProfileImage();
+
+      return () => {
+        isActive = false;
+      };
+    }, [])
+  );
 
   if (loading) {
     return <ActivityIndicator style={big ? styles.bigLoading : styles.loading} />;
@@ -45,7 +61,7 @@ export default function ProfileImage({ onPress, big }) {
         source={
           profileImage
             ? { uri: profileImage }
-            : require('../../assets/man.png')
+            : require('../../assets/man.png') // default image
         }
         style={big ? styles.bigImage : styles.image}
       />
