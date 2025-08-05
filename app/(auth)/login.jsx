@@ -1,5 +1,8 @@
+import { useRouter } from 'expo-router';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import React, { useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -10,22 +13,26 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebase/config';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleLogin = async () => {
+    if (loading) return; // prevent multiple presses
+
+    setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
       Alert.alert('Logged in!');
       router.replace('/(tabs)/omi');
     } catch (error) {
       Alert.alert('Login Failed', error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -50,6 +57,7 @@ export default function Login() {
             value={email}
             keyboardType="email-address"
             autoCapitalize="none"
+            editable={!loading}
           />
           <TextInput
             style={styles.input}
@@ -58,13 +66,25 @@ export default function Login() {
             secureTextEntry
             onChangeText={setPassword}
             value={password}
+            editable={!loading}
           />
 
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-            <Text style={styles.loginButtonText}>Login</Text>
+          <TouchableOpacity
+            style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#3b82f6" />
+            ) : (
+              <Text style={styles.loginButtonText}>Login</Text>
+            )}
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => router.push('/signup')}>
+          <TouchableOpacity
+            onPress={() => router.push('/signup')}
+            disabled={loading}
+          >
             <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
           </TouchableOpacity>
         </View>
@@ -108,6 +128,9 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignItems: 'center',
     marginTop: 10,
+  },
+  loginButtonDisabled: {
+    opacity: 0.7,
   },
   loginButtonText: {
     color: '#3b82f6',

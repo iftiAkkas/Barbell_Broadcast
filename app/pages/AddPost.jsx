@@ -1,21 +1,22 @@
+import { useNavigation } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
+  ActivityIndicator,
   Alert,
-  TextInput,
-  TouchableOpacity,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
 import { FloatingAction } from 'react-native-floating-action';
-import { db } from '../../firebase/config';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { auth } from '../../firebase/config';
+import { auth, db } from '../../firebase/config';
 
 const actions = [
   {
@@ -39,24 +40,23 @@ const uploadImageToCloudinary = async (uri) => {
     type: 'image/jpeg',
     name: `upload_${Date.now()}.jpg`,
   });
-  data.append('upload_preset', 'barbellblabla'); // your upload preset here
-  data.append('cloud_name', 'dumsmhrum'); // your cloud name here
+  data.append('upload_preset', 'barbellblabla');
+  data.append('cloud_name', 'dumsmhrum');
 
-  const response = await fetch(
-    'https://api.cloudinary.com/v1_1/dumsmhrum/image/upload',
-    {
-      method: 'POST',
-      body: data,
-    }
-  );
+  const response = await fetch('https://api.cloudinary.com/v1_1/dumsmhrum/image/upload', {
+    method: 'POST',
+    body: data,
+  });
 
   const result = await response.json();
   return result.secure_url;
 };
 
 const AddPost = () => {
+  const navigation = useNavigation();
   const [selectedImage, setSelectedImage] = useState(null);
   const [caption, setCaption] = useState('');
+  const [isPosting, setIsPosting] = useState(false);
 
   const handleAction = async (name) => {
     let result;
@@ -64,13 +64,9 @@ const AddPost = () => {
     if (name === 'camera') {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert(
-          'Permission denied',
-          'Camera access is needed to take a photo.'
-        );
+        Alert.alert('Permission denied', 'Camera access is needed to take a photo.');
         return;
       }
-
       result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
         aspect: [4, 3],
@@ -81,13 +77,9 @@ const AddPost = () => {
     if (name === 'gallery') {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert(
-          'Permission denied',
-          'Gallery access is needed to select a photo.'
-        );
+        Alert.alert('Permission denied', 'Gallery access is needed to select a photo.');
         return;
       }
-
       result = await ImagePicker.launchImageLibraryAsync({
         allowsEditing: true,
         aspect: [4, 3],
@@ -103,9 +95,11 @@ const AddPost = () => {
 
   const handlePost = async () => {
     try {
+      setIsPosting(true);
       const user = auth.currentUser;
       if (!user) {
         Alert.alert('Not logged in', 'You must be logged in to post.');
+        setIsPosting(false);
         return;
       }
 
@@ -128,9 +122,12 @@ const AddPost = () => {
       Alert.alert('Success', 'Post uploaded!');
       setCaption('');
       setSelectedImage(null);
+      navigation.goBack();
     } catch (error) {
       console.error(error);
       Alert.alert('Error', 'Something went wrong while posting.');
+    } finally {
+      setIsPosting(false);
     }
   };
 
@@ -140,7 +137,12 @@ const AddPost = () => {
       style={styles.keyboardAvoid}
     >
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Add Post</Text>
+        <View style={styles.headerContainer}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Text style={styles.backButtonText}>←</Text>
+          </TouchableOpacity>
+          <Text style={styles.title}>Add Post</Text>
+        </View>
 
         <TextInput
           style={styles.input}
@@ -164,13 +166,19 @@ const AddPost = () => {
           </View>
         )}
 
-        <TouchableOpacity style={styles.postButton} onPress={handlePost}>
-          <Text style={styles.postButtonText}>Post</Text>
-        </TouchableOpacity>
+        {isPosting ? (
+          <View style={styles.loadingButton}>
+            <ActivityIndicator size="small" color="#fff" />
+          </View>
+        ) : (
+          <TouchableOpacity style={styles.postButton} onPress={handlePost}>
+            <Text style={styles.postButtonText}>Post</Text>
+          </TouchableOpacity>
+        )}
 
         <FloatingAction
           actions={actions}
-          color="#e74c3c"
+          color="#3b82f6"
           overlayColor="rgba(0, 0, 0, 0.5)"
           onPressItem={handleAction}
           distanceToEdge={{ vertical: 90, horizontal: 20 }}
@@ -192,12 +200,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 270,
   },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    marginTop: 20,
+    position: 'relative',
+    height: 40,
+  },
+  backButton: {
+    position: 'absolute',
+    left: 0,
+  },
+  backButtonText: {
+    fontSize: 20,
+    color: '#3b82f6',
+    fontWeight: '600',
+    paddingHorizontal: 10,
+  },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#3b82f6',
     textAlign: 'center',
-    marginBottom: 30,
-    color: '#333',
   },
   input: {
     borderWidth: 1,
@@ -236,7 +262,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   postButton: {
-    backgroundColor: '#e74c3c',
+    backgroundColor: '#3b82f6',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -246,5 +272,12 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '700',
     fontSize: 18,
+  },
+  loadingButton: {
+    backgroundColor: '#a5b4fc',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 40,
   },
 });

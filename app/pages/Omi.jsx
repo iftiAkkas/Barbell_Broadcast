@@ -1,13 +1,13 @@
-import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React from 'react';
 import ProfileImage from '../components/profileImage';
 import Profile from './Profile';
 
 // Your screens
-import HomeScreen from '../screens/HomeScreen';
-import ExerciseLogScreen from '../screens/ExerciseLogScreen';
-import ExerciseGraphScreen from '../screens/ExerciseGraphScreen';
 import CustomTrackerScreen from '../screens/CustomTrackerScreen';
+import ExerciseGraphScreen from '../screens/ExerciseGraphScreen';
+import ExerciseLogScreen from '../screens/ExerciseLogScreen';
+import HomeScreen from '../screens/HomeScreen';
 import PersonalInfoScreen from '../screens/PersonalInfoScreen';
 import RoutineScreen from '../screens/RoutineScreen';
 import TrackerListScreen from '../screens/TrackerListScreen';
@@ -18,11 +18,12 @@ export default function Omi() {
   return (
     <Stack.Navigator
       initialRouteName="Home"
+      options={{headerShown: false}}
       screenOptions={({ navigation }) => ({
-        headerRight: () => (
+        headerLeft: () => (
           <ProfileImage onPress={() => navigation.navigate('Profile')} />
         ),
-        headerTitleAlign: 'center',
+        headerTitle: '',
       })}
     >
       <Stack.Screen name="Home" component={HomeScreen} />

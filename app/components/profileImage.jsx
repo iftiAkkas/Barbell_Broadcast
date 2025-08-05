@@ -1,69 +1,100 @@
-import React, { useEffect, useState } from 'react';
-import { Image, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { getAuth } from 'firebase/auth';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
+import React, { useCallback, useState } from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import app from '../../firebase/config';
 
 export default function ProfileImage({ onPress, big }) {
   const [profileImage, setProfileImage] = useState(null);
+  const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchProfileImage() {
-      try {
-        const auth = getAuth(app);
-        const user = auth.currentUser;
-        if (!user) return;
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
 
-        const db = getFirestore(app);
-        const userDocRef = doc(db, 'users', user.uid);
-        const userDocSnap = await getDoc(userDocRef);
+      const fetchUserData = async () => {
+        try {
+          const auth = getAuth(app);
+          const user = auth.currentUser;
+          if (!user) return;
 
-        if (userDocSnap.exists()) {
-          const data = userDocSnap.data();
-          if (data.profileImage) {
-            setProfileImage(data.profileImage);
+          const db = getFirestore(app);
+          const userDocRef = doc(db, 'users', user.uid);
+          const userDocSnap = await getDoc(userDocRef);
+
+          if (userDocSnap.exists() && isActive) {
+            const data = userDocSnap.data();
+            const fullName = `${(data.firstName || '').trim()} ${(data.lastName || '').trim()}`.trim();
+            setUsername(fullName || 'User');
+            setProfileImage(data.profileImage || null);
           }
+        } catch (error) {
+          console.log('Error fetching user data:', error);
+        } finally {
+          if (isActive) setLoading(false);
         }
-      } catch (error) {
-        console.log('Error fetching profile image:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
+      };
 
-    fetchProfileImage();
-  }, []);
+      fetchUserData();
+      return () => {
+        isActive = false;
+      };
+    }, [])
+  );
 
   if (loading) {
-    return <ActivityIndicator style={big ? styles.bigLoading : styles.loading} />;
+    return (
+      <ActivityIndicator style={big ? styles.bigLoading : styles.loading} />
+    );
   }
 
   return (
-    <TouchableOpacity onPress={onPress} style={big ? styles.bigContainer : styles.container}>
-      <Image
-        source={
-          profileImage
-            ? { uri: profileImage }
-            : require('../../assets/avatar.png')
-        }
-        style={big ? styles.bigImage : styles.image}
-      />
-    </TouchableOpacity>
+    <View style={big ? styles.bigWrapper : styles.wrapper}>
+      <TouchableOpacity onPress={onPress}>
+        <Image
+          source={
+            profileImage
+              ? { uri: profileImage }
+              : require('../../assets/man.png')
+          }
+          style={big ? styles.bigImage : styles.image}
+        />
+      </TouchableOpacity>
+
+      {!big && (
+        <Text style={styles.usernameText}>{username}</Text>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginLeft: 15,
+  wrapper: {
+    marginLeft: 150,
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 200,
+    width: 200,
+  },
+  bigWrapper: {
+    alignItems: 'center',
+    marginBottom: 20,
+    height: 200,
+    width: 200,
   },
   image: {
     width: 40,
     height: 40,
     borderRadius: 36,
-  },
-  bigContainer: {
-    marginBottom: 20,
   },
   bigImage: {
     width: 120,
@@ -75,5 +106,12 @@ const styles = StyleSheet.create({
   },
   bigLoading: {
     marginBottom: 20,
+  },
+  usernameText: {
+    marginLeft: 8,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'black',
+    maxWidth: 300,
   },
 });

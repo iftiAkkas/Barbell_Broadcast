@@ -1,6 +1,6 @@
+import { collection, deleteDoc, doc, onSnapshot, orderBy, query } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { View, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
-import { collection, onSnapshot, orderBy, query, deleteDoc, doc } from 'firebase/firestore';
+import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
 import { db } from '../../firebase/config'; // adjust path if needed
 import PostCard from '../components/postCard';
 
@@ -59,6 +59,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f0f2f5',
+    marginBottom: 80,
   },
   loadingContainer: {
     flex: 1,

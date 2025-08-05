@@ -72,17 +72,18 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 50,
     alignItems: 'center',
+   // marginTop:60,
   },
   welcomeText: {
-    fontSize: 24,
+    fontSize: 29,
     fontWeight: '700',
     color: '#3b82f6',
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 17,
     color: '#6b7280',
-    marginBottom: 30,
+    marginBottom: 80,
     textAlign: 'center',
   },
   gridContainer: {
