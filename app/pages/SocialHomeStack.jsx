@@ -1,15 +1,25 @@
 import React from 'react';
-import { SafeAreaView, StatusBar, Platform,TouchableOpacity } from 'react-native';
+import { StatusBar, TouchableOpacity } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import SocialHomeScreen from './SocialHome';
 import AddPost from './AddPost';
 
 const Stack = createStackNavigator();
 
-const HomeStack = () => {
+function WrappedNavigator() {
+  const insets = useSafeAreaInsets();
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#3b82f6' }}>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: '#3b82f6',
+        paddingTop: insets.top, // ensures safe top padding dynamically
+      }}
+    >
       <StatusBar
         barStyle="light-content"
         backgroundColor="#3b82f6"
@@ -24,7 +34,7 @@ const HomeStack = () => {
             shadowOpacity: 0.2,
             shadowOffset: { width: 0, height: 2 },
             shadowRadius: 4,
-            height: 56,
+            // Remove fixed height for better flexibility
           },
           headerTintColor: '#fff',
           headerTitleStyle: {
@@ -32,12 +42,14 @@ const HomeStack = () => {
             fontSize: 20,
           },
           headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={{ paddingHorizontal: 16 }}
-            >
-              <Ionicons name="arrow-back" size={24} color="#fff" />
-            </TouchableOpacity>
+            navigation.canGoBack() && (
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                style={{ paddingHorizontal: 16 }}
+              >
+                <Ionicons name="arrow-back" size={24} color="#fff" />
+              </TouchableOpacity>
+            )
           ),
         })}
       >
@@ -70,6 +82,12 @@ const HomeStack = () => {
       </Stack.Navigator>
     </SafeAreaView>
   );
-};
+}
 
-export default HomeStack;
+export default function HomeStack() {
+  return (
+    <SafeAreaProvider>
+      <WrappedNavigator />
+    </SafeAreaProvider>
+  );
+}

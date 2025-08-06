@@ -2,16 +2,16 @@ import { useRouter } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
+  View,
+  TextInput,
+  Text,
+  StyleSheet,
   Alert,
+  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+  ActivityIndicator,
 } from 'react-native';
 import { auth } from '../../firebase/config';
 
@@ -38,21 +38,18 @@ export default function Login() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.keyboardAvoiding}
+      style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+      keyboardVerticalOffset={60}
     >
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.form}>
+      <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+        <View style={styles.container}>
           <Text style={styles.heading}>Login</Text>
 
           <TextInput
             style={styles.input}
             placeholder="Email"
-            placeholderTextColor="white"
+            placeholderTextColor="#999"
             onChangeText={setEmail}
             value={email}
             keyboardType="email-address"
@@ -62,7 +59,7 @@ export default function Login() {
           <TextInput
             style={styles.input}
             placeholder="Password"
-            placeholderTextColor="white"
+            placeholderTextColor="#999"
             secureTextEntry
             onChangeText={setPassword}
             value={password}
@@ -75,16 +72,13 @@ export default function Login() {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator size="small" color="#3b82f6" />
+              <ActivityIndicator size="small" color="#1e90ff" />
             ) : (
               <Text style={styles.loginButtonText}>Login</Text>
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => router.push('/signup')}
-            disabled={loading}
-          >
+          <TouchableOpacity onPress={() => router.push('/signup')} disabled={loading}>
             <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
           </TouchableOpacity>
         </View>
@@ -94,36 +88,31 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-  keyboardAvoiding: {
-    flex: 1,
-    backgroundColor: '#3b82f6',
-    minHeight: '100%',
-  },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 24,
   },
-  form: {
-    width: '100%',
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 20,
   },
   heading: {
     fontSize: 32,
     fontWeight: 'bold',
     marginBottom: 24,
     textAlign: 'center',
-    color: 'white',
   },
   input: {
     borderWidth: 1,
-    borderColor: 'white',
+    borderColor: '#ccc',
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
-    color: 'white',
+    color: '#000',
   },
   loginButton: {
-    backgroundColor: 'white',
+    backgroundColor: '#1e90ff',
     paddingVertical: 14,
     borderRadius: 6,
     alignItems: 'center',
@@ -133,13 +122,13 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   loginButtonText: {
-    color: '#3b82f6',
+    color: 'white',
     fontWeight: 'bold',
     fontSize: 16,
   },
   linkText: {
     marginTop: 20,
-    color: '#ffffff',
+    color: '#1e90ff',
     textAlign: 'center',
   },
 });
