@@ -38,7 +38,7 @@ const HomeStack = () => {
           headerTitleAlign: 'center',
           headerStyle: {
             backgroundColor: '#3b82f6',
-            height: 110,
+            height: 56, // typical header height
             elevation: 3,
             shadowOpacity: 0.2,
             shadowOffset: { width: 0, height: 2 },
@@ -50,7 +50,7 @@ const HomeStack = () => {
       <Stack.Screen
         name="AddPost"
         component={AddPost}
-        options={({ navigation }) => ({
+        options={{
           headerTitle: 'Add Post',
           headerTitleAlign: 'center',
           headerTitleStyle: {
@@ -63,10 +63,11 @@ const HomeStack = () => {
             elevation: 2,
             shadowOpacity: 0.1,
           },
-        })}
+        }}
       />
     </Stack.Navigator>
   );
 };
+
 
 export default HomeStack;
