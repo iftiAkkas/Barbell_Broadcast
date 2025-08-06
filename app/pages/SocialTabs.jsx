@@ -88,22 +88,23 @@ function FloatingAddButton({ onPress }) {
 const styles = StyleSheet.create({
   fabWrapper: {
     position: 'absolute',
-    top: -30,
+    top: -20, // ↓ was -30 before, now it's closer to tab bar
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
   },
   fab: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 60,       // ↓ smaller width (was 70)
+    height: 60,      // ↓ smaller height (was 70)
+    borderRadius: 30, // adjust based on new size
     backgroundColor: '#3b82f6',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 4 }, // soften shadow
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 8,
   },
 });
+
