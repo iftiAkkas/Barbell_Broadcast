@@ -1,7 +1,4 @@
-import { useNavigation } from '@react-navigation/native';
-import * as ImagePicker from 'expo-image-picker';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -14,8 +11,12 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Keyboard,
+  Animated,
 } from 'react-native';
 import { FloatingAction } from 'react-native-floating-action';
+import * as ImagePicker from 'expo-image-picker';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../firebase/config';
 
 const actions = [
@@ -52,11 +53,34 @@ const uploadImageToCloudinary = async (uri) => {
   return result.secure_url;
 };
 
-const AddPost = () => {
-  const navigation = useNavigation();
+const AddPost = ({ navigation }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [caption, setCaption] = useState('');
   const [isPosting, setIsPosting] = useState(false);
+  const [keyboardHeight] = useState(new Animated.Value(60)); // start at 60 px
+
+  useEffect(() => {
+    const keyboardWillShow = Keyboard.addListener('keyboardWillShow', (e) => {
+      Animated.timing(keyboardHeight, {
+        duration: e.duration,
+        toValue: e.endCoordinates.height + 40, // 40px above keyboard
+        useNativeDriver: false,
+      }).start();
+    });
+
+    const keyboardWillHide = Keyboard.addListener('keyboardWillHide', (e) => {
+      Animated.timing(keyboardHeight, {
+        duration: e.duration,
+        toValue: 60, // default 60px bottom margin
+        useNativeDriver: false,
+      }).start();
+    });
+
+    return () => {
+      keyboardWillShow.remove();
+      keyboardWillHide.remove();
+    };
+  }, [keyboardHeight]);
 
   const handleAction = async (name) => {
     let result;
@@ -69,7 +93,7 @@ const AddPost = () => {
       }
       result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
-        aspect: [4, 3],
+        aspect: [3, 4],
         quality: 1,
       });
     }
@@ -82,7 +106,7 @@ const AddPost = () => {
       }
       result = await ImagePicker.launchImageLibraryAsync({
         allowsEditing: true,
-        aspect: [4, 3],
+        aspect: [3, 4],
         quality: 1,
       });
     }
@@ -136,7 +160,7 @@ const AddPost = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.keyboardAvoid}
     >
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.headerContainer}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <Text style={styles.backButtonText}>←</Text>
@@ -157,10 +181,7 @@ const AddPost = () => {
         {selectedImage && (
           <View style={styles.imageWrapper}>
             <Image source={{ uri: selectedImage }} style={styles.image} />
-            <TouchableOpacity
-              style={styles.removeImageBtn}
-              onPress={() => setSelectedImage(null)}
-            >
+            <TouchableOpacity style={styles.removeImageBtn} onPress={() => setSelectedImage(null)}>
               <Text style={styles.removeImageText}>Remove</Text>
             </TouchableOpacity>
           </View>
@@ -175,15 +196,20 @@ const AddPost = () => {
             <Text style={styles.postButtonText}>Post</Text>
           </TouchableOpacity>
         )}
+      </ScrollView>
 
+      <Animated.View style={[styles.floatingAction, { bottom: keyboardHeight }]}>
         <FloatingAction
           actions={actions}
           color="#3b82f6"
           overlayColor="rgba(0, 0, 0, 0.5)"
           onPressItem={handleAction}
-          distanceToEdge={{ vertical: 90, horizontal: 20 }}
+          distanceToEdge={{ vertical: 0, horizontal: 20 }}
+          showBackground={false}
+          iconWidth={26}
+          iconHeight={26}
         />
-      </ScrollView>
+      </Animated.View>
     </KeyboardAvoidingView>
   );
 };
@@ -245,7 +271,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    height: 250,
+    aspectRatio: 3 / 4, // maintain 3:4 portrait ratio
     borderRadius: 12,
   },
   removeImageBtn: {
@@ -279,5 +305,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     marginBottom: 40,
+  },
+  floatingAction: {
+    position: 'absolute',
+    right: 20,
+    marginBottom: 0,
   },
 });

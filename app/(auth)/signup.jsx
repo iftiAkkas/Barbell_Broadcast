@@ -28,7 +28,7 @@ export default function Signup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [birthday, setBirthday] = useState(new Date());
+  const [birthday, setBirthday] = useState(null); // initially null to show placeholder
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [gender, setGender] = useState('');
 
@@ -50,7 +50,7 @@ export default function Signup() {
         firstName,
         lastName,
         email,
-        birthday: birthday.toISOString().split('T')[0], // saves as YYYY-MM-DD
+        birthday: birthday ? birthday.toISOString().split('T')[0] : null,
         gender,
         createdAt: new Date(),
       });
@@ -71,23 +71,30 @@ export default function Signup() {
       <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
         <View style={styles.container}>
           <Text style={styles.heading}>Sign Up</Text>
+
           <View style={styles.row}>
             <TextInput
               style={[styles.input, { flex: 1, marginRight: 8 }]}
               placeholder="First name"
+              placeholderTextColor="#999"
               onChangeText={setFirstName}
               value={firstName}
+              autoCapitalize="words"
             />
             <TextInput
               style={[styles.input, { flex: 1 }]}
               placeholder="Last name"
+              placeholderTextColor="#999"
               onChangeText={setLastName}
               value={lastName}
+              autoCapitalize="words"
             />
           </View>
+
           <TextInput
             style={styles.input}
             placeholder="Email"
+            placeholderTextColor="#999"
             onChangeText={setEmail}
             value={email}
             keyboardType="email-address"
@@ -96,19 +103,22 @@ export default function Signup() {
 
           {/* Birthday Picker */}
           <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.input}>
-            <Text>{birthday ? birthday.toDateString() : 'Select Birthday'}</Text>
+            <Text style={{ color: birthday ? '#000' : '#999' }}>
+              {birthday ? birthday.toDateString() : 'Select Date of Birth'}
+            </Text>
           </TouchableOpacity>
           {showDatePicker && (
             <DateTimePicker
-              value={birthday}
+              value={birthday || new Date(2000, 0, 1)}
               mode="date"
               display={Platform.OS === 'ios' ? 'spinner' : 'default'}
               onChange={(event, selectedDate) => {
-                setShowDatePicker(Platform.OS === 'ios'); // stay open on iOS
+                setShowDatePicker(Platform.OS === 'ios');
                 if (selectedDate) {
                   setBirthday(selectedDate);
                 }
               }}
+              maximumDate={new Date()} // can't select future date
             />
           )}
 
@@ -129,6 +139,7 @@ export default function Signup() {
           <TextInput
             style={styles.input}
             placeholder="Password"
+            placeholderTextColor="#999"
             secureTextEntry
             onChangeText={setPassword}
             value={password}
@@ -136,6 +147,7 @@ export default function Signup() {
           <TextInput
             style={styles.input}
             placeholder="Confirm Password"
+            placeholderTextColor="#999"
             secureTextEntry
             onChangeText={setConfirmPassword}
             value={confirmPassword}
@@ -194,6 +206,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
+    color: '#000',
   },
   socialRow: {
     flexDirection: 'row',
@@ -207,7 +220,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#ccc',
     borderRadius: 24,
-    padding: 0,
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',

@@ -20,7 +20,7 @@ export default function Omi() {
       initialRouteName="Home"
       options={{headerShown: false}}
       screenOptions={({ navigation }) => ({
-        headerLeft: () => (
+        headerRight: () => (
           <ProfileImage onPress={() => navigation.navigate('Profile')} />
         ),
         headerTitle: '',

@@ -207,6 +207,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#ccc',
     borderTopWidth: 1,
     backgroundColor: '#f9f9f9',
+    
   },
   input: {
     flex: 1,
@@ -217,6 +218,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     marginRight: 10,
     maxHeight: 100,
+    marginBottom: 10,
   },
   sendButton: {
     backgroundColor: '#0a84ff',
@@ -225,5 +227,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 10,
   },
 });

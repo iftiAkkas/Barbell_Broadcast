@@ -5,6 +5,7 @@ import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import AddPost from './AddPost';
 import HomeStack from './SocialHomeStack';
 import SocialMessagesTabs from './SocialMessagesTabs';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 
 const Tab = createBottomTabNavigator();
 
@@ -56,15 +57,31 @@ export default function SocialTabs() {
       <Tab.Screen
         name="Messages"
         component={SocialMessagesTabs}
-        options={{
-          tabBarIcon: ({ focused, color, size }) => (
-            <Ionicons
-              name={focused ? 'chatbubble' : 'chatbubble-outline'}
-              size={size}
-              color={color}
-            />
-          ),
-          tabBarLabel: 'Messages',
+        options={({ route }) => {
+          // Get the currently focused route name in the nested SocialMessagesTabs
+          const routeName = getFocusedRouteNameFromRoute(route) ?? 'Community';
+
+          return {
+            tabBarIcon: ({ focused, color, size }) => (
+              <Ionicons
+                name={focused ? 'chatbubble' : 'chatbubble-outline'}
+                size={size}
+                color={color}
+              />
+            ),
+            tabBarLabel: 'Messages',
+
+            // Hide tab bar when inside Community or Private top tabs
+            tabBarStyle: {
+              display: routeName === 'Community' || routeName === 'Private' ? 'none' : 'flex',
+              position: 'absolute', // keep absolute positioning for the tab bar
+              backgroundColor: '#fff',
+              height: 80,
+              paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+              borderTopWidth: 0,
+              elevation: 5,
+            },
+          };
         }}
       />
     </Tab.Navigator>
@@ -88,22 +105,22 @@ function FloatingAddButton({ onPress }) {
 const styles = StyleSheet.create({
   fabWrapper: {
     position: 'absolute',
-    top: -30,
+    top: -20,
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
   },
   fab: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: '#3b82f6',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 8,
   },
 });

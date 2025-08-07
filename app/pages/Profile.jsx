@@ -215,21 +215,21 @@ export default function Profile() {
 
       <View style={styles.gridRow}>
         <TouchableOpacity style={styles.gridButton} onPress={chooseImageSource}>
-          <Ionicons name="camera" size={20} color="#fff" />
-          <Text style={styles.buttonText}>Change Picture</Text>
+          <Ionicons name="camera" style={styles.gridIcon} color="#fff" />
+          <Text style={styles.gridLabel}>Change Picture</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.gridButton} onPress={handleChangeUsername}>
-          <Ionicons name="create-outline" size={20} color="#fff" />
-          <Text style={styles.buttonText}>Change Name</Text>
+          <Ionicons name="create-outline" style={styles.gridIcon} color="#fff" />
+          <Text style={styles.gridLabel}>Change Name</Text>
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity
-        style={[styles.button, { backgroundColor: '#dc3545', marginTop: 24, width: '100%' }]}
+        style={[styles.button, { backgroundColor: '#dc3545', marginTop: 40, width: '100%' }]}
         onPress={handleLogout}
       >
-        <Ionicons name="log-out-outline" size={20} color="#fff" />
+        <Ionicons name="log-out-outline" size={22} color="#fff" />
         <Text style={styles.buttonText}>Logout</Text>
       </TouchableOpacity>
 
@@ -302,34 +302,41 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
+    marginTop: 20,
   },
   gridButton: {
-    flex: 1,
-    flexDirection: 'row',
+    width: 140,
+    height: 100,
     backgroundColor: '#007bff',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 25,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    marginHorizontal: 5,
-
+    marginHorizontal: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 8,
   },
+  gridIcon: {
+    fontSize: 40,
+    marginBottom: 8,
+  },
+  gridLabel: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   button: {
     flexDirection: 'row',
     backgroundColor: '#007bff',
     paddingVertical: 14,
     paddingHorizontal: 20,
-    borderRadius: 25,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: 8,
-
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
