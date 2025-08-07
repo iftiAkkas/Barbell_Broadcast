@@ -16,7 +16,7 @@ import {
   arrayUnion,
   arrayRemove,
   increment,
-  getDoc,
+  onSnapshot,
 } from 'firebase/firestore';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
@@ -28,45 +28,42 @@ const PostCard = ({ item, onDelete, onMessage, isFirst }) => {
   const userId = user?.uid;
   const isPostOwner = userId === item.userId;
 
-  const [liked, setLiked] = useState(item.likedBy?.includes(userId));
-  const [likeCount, setLikeCount] = useState(item.likeCount || 0);
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
 
   const [profileImage, setProfileImage] = useState(null);
-  const [userName, setUserName] = useState(item.userName || 'Unknown');
+  const [userName, setUserName] = useState('Unknown');
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const userDoc = await getDoc(doc(db, 'users', item.userId));
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-          const fullName = `${(data.firstName || '').trim()} ${(data.lastName || '').trim()}`.trim();
-          setUserName(fullName || item.userName || 'Unknown');
-          setProfileImage(data.profileImage || null);
-        } else {
-          setUserName(item.userName || 'Unknown');
-          setProfileImage(null);
-        }
-      } catch (error) {
-        console.error('Error fetching user profile:', error);
-        setUserName(item.userName || 'Unknown');
-        setProfileImage(null);
+    const postRef = doc(db, 'posts', item.id);
+    const unsubscribePost = onSnapshot(postRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setLiked(data.likedBy?.includes(userId));
+        setLikeCount(data.likeCount || 0);
       }
+    });
+
+    const userRef = doc(db, 'users', item.userId);
+    const unsubscribeUser = onSnapshot(userRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const fullName = `${(data.firstName || '').trim()} ${(data.lastName || '').trim()}`.trim();
+        setUserName(fullName || item.userName || 'Unknown');
+        setProfileImage(data.profileImage || null);
+      }
+    });
+
+    return () => {
+      unsubscribePost();
+      unsubscribeUser();
     };
-
-    fetchUserProfile();
-  }, [item.userId, item.userName]);
-
-  useEffect(() => {
-    setLiked(item.likedBy?.includes(userId));
-  }, [item.likedBy]);
+  }, [item.id, item.userId, userId]);
 
   const toggleLike = async () => {
     const postRef = doc(db, 'posts', item.id);
     const newLiked = !liked;
-    setLiked(newLiked);
-    setLikeCount((prev) => prev + (newLiked ? 1 : -1));
 
     try {
       await updateDoc(postRef, {
@@ -108,7 +105,6 @@ const PostCard = ({ item, onDelete, onMessage, isFirst }) => {
 
   return (
     <View style={[styles.card, isFirst && styles.firstCard]}>
-      {/* Show message button only if NOT post owner */}
       {!isPostOwner && (
         <TouchableOpacity
           style={styles.messageButton}
@@ -168,7 +164,6 @@ const PostCard = ({ item, onDelete, onMessage, isFirst }) => {
           <Text style={styles.interactionText}>{likeCount}</Text>
         </TouchableOpacity>
 
-        {/* Show delete button only if post owner */}
         {isPostOwner && (
           <TouchableOpacity style={styles.interaction} onPress={() => onDelete(item.id)}>
             <Ionicons name="trash" size={24} color="#333" />
@@ -240,7 +235,7 @@ const styles = StyleSheet.create({
   },
   postImg: {
     width: '100%',
-    aspectRatio: 3 / 4,  // <-- Maintain 3:4 portrait aspect ratio here
+    aspectRatio: 3 / 4,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#3b82f6',
