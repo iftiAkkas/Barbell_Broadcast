@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   Image,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -14,7 +13,6 @@ import app from '../../firebase/config';
 
 export default function ProfileImage({ onPress, big }) {
   const [profileImage, setProfileImage] = useState(null);
-  const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(true);
 
   useFocusEffect(
@@ -33,8 +31,6 @@ export default function ProfileImage({ onPress, big }) {
 
           if (userDocSnap.exists() && isActive) {
             const data = userDocSnap.data();
-            const fullName = `${(data.firstName || '').trim()} ${(data.lastName || '').trim()}`.trim();
-            setUsername(fullName || 'User');
             setProfileImage(data.profileImage || null);
           }
         } catch (error) {
@@ -69,10 +65,6 @@ export default function ProfileImage({ onPress, big }) {
           style={big ? styles.bigImage : styles.image}
         />
       </TouchableOpacity>
-
-      {!big && (
-        <Text style={styles.usernameText}>{username}</Text>
-      )}
     </View>
   );
 }
@@ -106,12 +98,5 @@ const styles = StyleSheet.create({
   },
   bigLoading: {
     marginBottom: 20,
-  },
-  usernameText: {
-    marginLeft: 8,
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: 'black',
-    maxWidth: 300,
   },
 });
