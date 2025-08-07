@@ -41,23 +41,29 @@ export default function HomeScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContainer}>
-      <Text style={styles.welcomeText}>Welcome Back</Text>
+      {/* Welcome Back with custom styles */}
+      <View style={styles.welcomeContainer}>
+        <Text style={styles.welcomeBlue}>Welcome</Text>
+        <Text style={styles.welcomeWhite}>Back</Text>
+      </View>
+
       <Text style={styles.subtitle}>Stay on track with your fitness goals</Text>
 
       <View style={styles.gridContainer}>
-      {buttons.map(({ label, icon, screen }) => (
-  <TouchableOpacity
-    key={label}
-    style={styles.gridButton}
-    onPress={() => navigation.navigate(screen)}
-    activeOpacity={0.85}
-  >
-    <Image source={typeof icon === 'string' ? { uri: icon } : icon} style={styles.icon} />
-<Text style={styles.buttonLabel}>{label}</Text>
-
-  </TouchableOpacity>
-))}
-
+        {buttons.map(({ label, icon, screen }) => (
+          <TouchableOpacity
+            key={label}
+            style={styles.gridButton}
+            onPress={() => navigation.navigate(screen)}
+            activeOpacity={0.85}
+          >
+            <Image
+              source={typeof icon === 'string' ? { uri: icon } : icon}
+              style={styles.icon}
+            />
+            <Text style={styles.buttonLabel}>{label}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
     </ScrollView>
   );
@@ -70,16 +76,41 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     padding: 20,
-    paddingTop: 50,
+    paddingTop: 30,
     alignItems: 'center',
-   // marginTop:60,
   },
-  welcomeText: {
+
+  // New styles for Welcome Back
+  welcomeContainer: {
+    flexDirection: 'row',
+    marginBottom: 10,
+    //alignItems: 'center',
+  },
+  welcomeBlue: {
+    backgroundColor: '#3b82f6',
+    color: 'white',
     fontSize: 29,
     fontWeight: '700',
-    color: '#3b82f6',
-    marginBottom: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderTopLeftRadius: 8,
+    borderBottomLeftRadius: 8,
+    //marginRight: 4,
+    alignItems: 'center',
   },
+  welcomeWhite: {
+    backgroundColor: 'white',
+    color: '#3b82f6',
+    fontSize: 29,
+    fontWeight: '700',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 2,
+    borderColor: '#3b82f6',
+    borderTopRightRadius: 8,
+    borderBottomRightRadius: 8,
+  },
+
   subtitle: {
     fontSize: 17,
     color: '#6b7280',
@@ -116,11 +147,10 @@ const styles = StyleSheet.create({
     height: BUTTON_SIZE * 0.4,
     marginBottom: 12,
   },
-buttonLabel: {
-  color: 'white',
-  fontWeight: '600',
-  fontSize: 14,
-  textAlign: 'center',
-},
-
+  buttonLabel: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 14,
+    textAlign: 'center',
+  },
 });

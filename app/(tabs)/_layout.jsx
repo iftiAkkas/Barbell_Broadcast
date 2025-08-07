@@ -11,7 +11,7 @@ export default function Layout() {
         options={{
           title: "Home",
           tabBarIcon: ({ focused, color, size }) => (
-            <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={size*1.2} color={color} />
           ),
         }}
       />
@@ -21,7 +21,7 @@ export default function Layout() {
         options={{
           title: "Exercises",
           tabBarIcon: ({ focused, color, size }) => (
-            <Ionicons name={focused ? 'barbell' : 'barbell-outline'} size={size} color={color} />
+            <Ionicons name={focused ? 'fitness' : 'fitness-outline'} size={size*1.2} color={color} />
           ),
         }}
       />
@@ -31,7 +31,7 @@ export default function Layout() {
         options={{
           title: "Social",
           tabBarIcon: ({ focused, color, size }) => (
-            <Ionicons name={focused ? 'people' : 'people-outline'} size={size} color={color} />
+            <Ionicons name={focused ? 'logo-instagram' : 'logo-instagram'} size={size*1.2} color={color} />
           ),
           tabBarStyle: { display: 'none' }, // hide tab bar for 'social'
         }}
@@ -41,7 +41,7 @@ export default function Layout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ focused, color, size }) => (
-            <Ionicons name={focused ? 'person' : 'person-outline'} size={size} color={color} />
+            <Ionicons name={focused ? 'person-circle' : 'person-circle-outline'} size={size*1.2} color={color} />
           ),
         }}
       />
