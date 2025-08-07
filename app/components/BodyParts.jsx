@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     paddingBottom: hp('5%'),
   },
   columnWrapper: {
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     marginBottom: hp('2%'),
   },
   cardButton: {
@@ -90,6 +90,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 6,
     position: 'relative',
+    marginHorizontal: wp('1.8%'),
   },
   cardImage: {
     width: '100%',
