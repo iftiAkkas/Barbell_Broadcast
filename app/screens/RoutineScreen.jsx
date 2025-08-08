@@ -1,6 +1,4 @@
-// Sets and Reps should display Range
-// Couldn't fix, leaving it for later
-
+// ✅ Final RoutineScreen.js with keyboard fix, separator between exercises, and dayData check
 
 import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -11,7 +9,8 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  KeyboardAvoidingView
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 
 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -49,84 +48,89 @@ export default function RoutineScreen() {
       setSelectedDays([...selectedDays, day]);
       setDayData({
         ...dayData,
-        [day]: { title: '', exercises: [''], sets: [''], reps: [''] }
+        [day]: { title: '', exercises: [''], sets: [''], reps: [''] },
       });
     }
   };
 
-const handleSave = async () => {
-  const finalRoutine = {
-    title: routineTitle,
-    selectedDays,
-    dayTitles: {},
-    exercises: {},
-    sets: {},
-    reps: {},
+  const handleSave = async () => {
+    const finalRoutine = {
+      title: routineTitle,
+      selectedDays,
+      dayTitles: {},
+      exercises: {},
+      sets: {},
+      reps: {},
+    };
+
+    selectedDays.forEach((day) => {
+      if (!dayData[day]) return;
+      finalRoutine.dayTitles[day] = dayData[day].title;
+
+      const cleanExercises = dayData[day].exercises
+        .map((ex, i) => ({
+          ex: ex.trim(),
+          sets: dayData[day].sets[i]?.toString().trim() || '0',
+          reps: dayData[day].reps[i]?.toString().trim() || '0',
+        }))
+        .filter(item => item.ex !== '');
+
+      finalRoutine.exercises[day] = cleanExercises.map(e => e.ex);
+      finalRoutine.sets[day] = cleanExercises.map(e => parseInt(e.sets));
+      finalRoutine.reps[day] = cleanExercises.map(e => parseInt(e.reps));
+    });
+
+    try {
+      await AsyncStorage.setItem('routine', JSON.stringify(finalRoutine));
+      setRoutine(finalRoutine);
+      setCreating(false);
+    } catch (e) {
+      console.error('❌ Failed to save routine:', e);
+    }
   };
 
-  selectedDays.forEach((day) => {
-    finalRoutine.dayTitles[day] = dayData[day].title;
-
-  const cleanExercises = dayData[day].exercises
-  .map((ex, i) => ({
-    ex: ex.trim(),
-    sets: dayData[day].sets[i]?.toString().trim() || '0',
-    reps: dayData[day].reps[i]?.toString().trim() || '0',
-  }))
-  .filter(item => item.ex !== '');
-
-finalRoutine.dayTitles[day] = dayData[day].title;
-finalRoutine.exercises[day] = cleanExercises.map(e => e.ex);
-finalRoutine.sets[day] = cleanExercises.map(e => parseInt(e.sets));
-finalRoutine.reps[day] = cleanExercises.map(e => parseInt(e.reps));
-
-  });
-
-  try {
-    await AsyncStorage.setItem('routine', JSON.stringify(finalRoutine));
-    setRoutine(finalRoutine);
-    setCreating(false);
-  } catch (e) {
-    console.error('❌ Failed to save routine:', e);
-  }
-};
-
-
-
-
   return (
-    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-    <ScrollView contentContainerStyle={styles.container}>
-      {!creating && !routine && (
-        <TouchableOpacity style={styles.createBtn} onPress={() => setCreating(true)}>
-          <Text style={styles.btnText}>Create A Routine</Text>
-        </TouchableOpacity>
-      )}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={80}
+    >
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+      >
+        {!creating && !routine && (
+          <TouchableOpacity style={styles.createBtn} onPress={() => setCreating(true)}>
+            <Text style={styles.btnText}>Create A Routine</Text>
+          </TouchableOpacity>
+        )}
 
-      {creating && (
-        <>
-          <TextInput
-            style={styles.input}
-            placeholder="Routine Title"
-            value={routineTitle}
-            onChangeText={setRoutineTitle}
-          />
+        {creating && (
+          <>
+            <TextInput
+              style={styles.input}
+              placeholder="Routine Title"
+              value={routineTitle}
+              onChangeText={setRoutineTitle}
+            />
 
-          <Text style={styles.title}>Select Workout Days (Weekly)</Text>
-          <View style={styles.daysContainer}>
-            {daysOfWeek.map(day => (
-              <TouchableOpacity
-                key={day}
-                style={[styles.dayBtn, selectedDays.includes(day) && styles.selected]}
-                onPress={() => toggleDay(day)}
-              >
-                <Text>{day}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+            <Text style={styles.title}>Select Workout Days (Weekly)</Text>
+            <View style={styles.daysContainer}>
+              {daysOfWeek.map(day => (
+                <TouchableOpacity
+                  key={day}
+                  style={[styles.dayBtn, selectedDays.includes(day) && styles.selected]}
+                  onPress={() => toggleDay(day)}
+                >
+                  <Text>{day}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
-          {selectedDays.map(day => (
-            <View key={day} style={styles.dayBlock}>
+            {selectedDays.map(day => {
+              if (!dayData[day]) return null;
+              return (
+              <View key={day} style={styles.dayBlock}>
               <Text style={styles.subtitle}>{day}</Text>
               <TextInput
                 style={styles.input}
@@ -136,207 +140,261 @@ finalRoutine.reps[day] = cleanExercises.map(e => parseInt(e.reps));
                   setDayData({ ...dayData, [day]: { ...dayData[day], title: text } })
                 }
               />
+              <View style={styles.separator} />
 
-              {dayData[day].exercises.map((_, idx) => (
-  <View key={idx} style={{ flexDirection: 'row', alignItems: 'center' }}>
-    <View style={{ flex: 1 }}>
-      <TextInput
-        style={styles.input}
-        placeholder={`Exercise ${idx + 1}`}
-        value={dayData[day].exercises[idx]}
-        onChangeText={text => {
-          const updated = [...dayData[day].exercises];
-          updated[idx] = text;
-          setDayData({ ...dayData, [day]: { ...dayData[day], exercises: updated } });
-        }}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Sets"
-        // keyboardType="numeric"
-        value={dayData[day].sets[idx]}
-        onChangeText={text => {
-          const updated = [...dayData[day].sets];
-          updated[idx] = text;
-          setDayData({ ...dayData, [day]: { ...dayData[day], sets: updated } });
-        }}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Reps"
-        value={dayData[day].reps[idx]}
-        onChangeText={text => {
-          const updated = [...dayData[day].reps];
-          updated[idx] = text;
-          setDayData({ ...dayData, [day]: { ...dayData[day], reps: updated } });
-        }}
-      />
-    </View>
+                  {dayData[day].exercises.map((_, idx) => (
+                    <View key={idx}>
+                      {idx > 0 && <View style={styles.exerciseSeparator} />}
 
-    {dayData[day].exercises.length > 1 && (
-      <TouchableOpacity
-        onPress={() => {
-          const newEx = [...dayData[day].exercises];
-          const newSets = [...dayData[day].sets];
-          const newReps = [...dayData[day].reps];
-          newEx.splice(idx, 1);
-          newSets.splice(idx, 1);
-          newReps.splice(idx, 1);
-          setDayData({
-            ...dayData,
-            [day]: {
-              ...dayData[day],
-              exercises: newEx,
-              sets: newSets,
-              reps: newReps,
-            },
-          });
-        }}
-        style={styles.deleteBtnSmall}
-      >
-        <Text style={styles.deleteText}>❌</Text>
-      </TouchableOpacity>
-    )}
-  </View>
-))}
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={{ flex: 1 }}>
+                          <TextInput
+                            style={styles.input}
+                            placeholder={`Exercise ${idx + 1}`}
+                            value={dayData[day].exercises[idx]}
+                            onChangeText={text => {
+                              const updated = [...dayData[day].exercises];
+                              updated[idx] = text;
+                              setDayData({ ...dayData, [day]: { ...dayData[day], exercises: updated } });
+                            }}
+                          />
+                          <TextInput
+                            style={styles.input}
+                            placeholder="Sets"
+                            value={dayData[day].sets[idx]}
+                            onChangeText={text => {
+                              const updated = [...dayData[day].sets];
+                              updated[idx] = text;
+                              setDayData({ ...dayData, [day]: { ...dayData[day], sets: updated } });
+                            }}
+                          />
+                          <TextInput
+                            style={styles.input}
+                            placeholder="Reps"
+                            value={dayData[day].reps[idx]}
+                            onChangeText={text => {
+                              const updated = [...dayData[day].reps];
+                              updated[idx] = text;
+                              setDayData({ ...dayData, [day]: { ...dayData[day], reps: updated } });
+                            }}
+                          />
+                        </View>
 
-              <TouchableOpacity
-                onPress={() => {
-                  setDayData({
-                    ...dayData,
-                    [day]: {
-                      ...dayData[day],
-                      exercises: [...dayData[day].exercises, ''],
-                      sets: [...dayData[day].sets, ''],
-                      reps: [...dayData[day].reps, ''],
-                    },
-                  });
-                }}
-              >
-                <Text style={styles.addMore}>+ Add Exercise</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
+                        {dayData[day].exercises.length > 1 && (
+                          <TouchableOpacity
+                            onPress={() => {
+                              const newEx = [...dayData[day].exercises];
+                              const newSets = [...dayData[day].sets];
+                              const newReps = [...dayData[day].reps];
+                              newEx.splice(idx, 1);
+                              newSets.splice(idx, 1);
+                              newReps.splice(idx, 1);
+                              setDayData({
+                                ...dayData,
+                                [day]: {
+                                  ...dayData[day],
+                                  exercises: newEx,
+                                  sets: newSets,
+                                  reps: newReps,
+                                },
+                              });
+                            }}
+                            style={styles.deleteBtnSmall}
+                          >
+                            <Text style={styles.deleteText}>❌</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    </View>
+                  ))}
 
-          <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-            <Text style={styles.btnText}>Save Routine</Text>
-          </TouchableOpacity>
-        </>
-      )}
+                  <TouchableOpacity
+                    onPress={() => {
+                      setDayData({
+                        ...dayData,
+                        [day]: {
+                          ...dayData[day],
+                          exercises: [...dayData[day].exercises, ''],
+                          sets: [...dayData[day].sets, ''],
+                          reps: [...dayData[day].reps, ''],
+                        },
+                      });
+                    }}
+                  >
+                    <Text style={styles.addMore}>+ Add Exercise</Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
 
-      {routine && !creating && (
-  <>
-    <Text style={styles.title}>Saved Routine: {routine.title}</Text>
-   {routine?.selectedDays?.map((day, i) => (
-  <View key={i} style={styles.dayBlock}>
-    <Text style={styles.subtitle}>
-      {day} - {routine.dayTitles?.[day] || ''}
-    </Text>
-{(routine.exercises?.[day] || []).map((ex, j) => {
-  const setVal = routine.sets?.[day]?.[j] || '?';
-  const repVal = routine.reps?.[day]?.[j] || '?';
+            <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
+              <Text style={styles.btnText}>Save Routine</Text>
+            </TouchableOpacity>
+          </>
+        )}
 
-  return (
-    <Text key={j} style={styles.exerciseLine}>
-      • {ex} ({setVal} sets × {repVal} reps)
-    </Text>
-  );
-})}
+        {routine && !creating && (
+          <>
+            <Text style={styles.title}>{routine.title}</Text>
+            {routine?.selectedDays?.map((day, i) => (
+              <View key={i} style={styles.dayBlock}>
+                <Text style={styles.subtitle}>
+                  {day} - {routine.dayTitles?.[day] || ''}
+                </Text>
+                {(routine.exercises?.[day] || []).map((ex, j) => {
+                  const setVal = routine.sets?.[day]?.[j] || '?';
+                  const repVal = routine.reps?.[day]?.[j] || '?';
 
+                  return (
+                    <Text key={j} style={styles.exerciseLine}>
+                      • {ex} ({setVal} sets × {repVal} reps)
+                    </Text>
+                  );
+                })}
+              </View>
+            ))}
 
+            <TouchableOpacity
+              style={styles.editBtn}
+              onPress={() => {
+                setCreating(true);
+                setRoutineTitle(routine.title);
+                setSelectedDays(routine.selectedDays);
+              const newDayData = {};
+                routine.selectedDays.forEach(day => {
+                  newDayData[day] = {
+                    title: routine.dayTitles[day],
+                    exercises: routine.exercises[day],
+                    sets: (routine.sets?.[day] || []).map(String),
+                    reps: (routine.reps?.[day] || []).map(String),
+                  };
+                });
 
-
-  </View>
-))}
-
-
-    <TouchableOpacity
-      style={styles.editBtn}
-    onPress={() => {
-  setCreating(true);
-  setRoutineTitle(routine.title);
-  setSelectedDays(routine.selectedDays);
-
-  const newDayData = {};
-routine.selectedDays.forEach(day => {
-  newDayData[day] = {
-    title: routine.dayTitles[day],
-    exercises: routine.exercises[day],
-    sets: routine.sets?.[day] || [],    
-    reps: routine.reps?.[day] || [],    
-  };
-});
-
-
-
-  setDayData(newDayData);
-}}
-
-    >
-      <Text style={styles.btnText}>Edit Routine</Text>
-    </TouchableOpacity>
-  </>
-)}
-
-    </ScrollView>
+                setDayData(newDayData);
+              }}
+            >
+              <Text style={styles.btnText}>Edit Routine</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16 },
+  container: {
+    padding: 20,
+    backgroundColor: 'white',
+  },
   input: {
     borderWidth: 1,
-    padding: 8,
-    borderRadius: 5,
-    marginVertical: 6,
-    backgroundColor: '#fff',
+    borderColor: '#d1d5db',
+    padding: 10,
+    borderRadius: 10,
+    marginVertical: 8,
+    backgroundColor: '#f9fafb',
+    fontSize: 15,
   },
-  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
-  subtitle: { fontSize: 16, fontWeight: '600', marginTop: 10 },
-  dayBlock: { marginVertical: 10, padding: 10, backgroundColor: '#f5f5f5', borderRadius: 6 },
-  daysContainer: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 10 },
+  title: {
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 14,
+    color: '#1e3a8a',
+  },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 10,
+    color: '#2563eb',
+    marginBottom: 10,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#cbd5e1',
+    marginVertical: 10,
+  },
+  exerciseSeparator: {
+    height: 1,
+    backgroundColor: '#d1d5db',
+    marginVertical: 10,
+    marginBottom: 30,
+  },
+  dayBlock: {
+    marginVertical: 12,
+    padding: 14,
+    backgroundColor: '#e0f2fe',
+    borderRadius: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  daysContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 14,
+    gap: 8,
+  },
   dayBtn: {
-    borderWidth: 1,
-    padding: 8,
-    margin: 4,
-    borderRadius: 6,
-    backgroundColor: '#ddd',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    backgroundColor: '#f3f4f6',
   },
-  selected: { backgroundColor: '#a0e1e5' },
-  addMore: { color: '#007bff', marginTop: 6 },
+  selected: {
+    backgroundColor: '#c1e4fcff',
+  },
+  addMore: {
+    color: '#2563eb',
+    fontWeight: '600',
+    marginTop: 8,
+    textAlign: 'center',
+  },
   createBtn: {
-    backgroundColor: '#07c5ffff',
-    padding: 12,
-    borderRadius: 6,
+    backgroundColor: '#3b82f6',
+    padding: 14,
+    borderRadius: 12,
     alignItems: 'center',
+    marginVertical: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    elevation: 4,
   },
   saveBtn: {
-    backgroundColor: '#28a745',
-    padding: 12,
-    borderRadius: 6,
+    backgroundColor: '#10b981',
+    padding: 14,
+    borderRadius: 12,
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 30,
   },
   editBtn: {
-    backgroundColor: '#07c5ffff',
-    padding: 12,
-    borderRadius: 6,
+    backgroundColor: '#3b82f6',
+    padding: 14,
+    borderRadius: 12,
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 30,
   },
-  btnText: { color: '#fff', fontWeight: 'bold' },
-  exerciseLine: { marginTop: 4 },
-
+  btnText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  exerciseLine: {
+    marginTop: 6,
+    fontSize: 15,
+    color: '#1e293b',
+  },
   deleteBtnSmall: {
-  marginLeft: 10,
-  backgroundColor: '#dc3545',
-  padding: 8,
-  borderRadius: 5,
-},
-deleteText: {
-  color: '#fff',
-  fontWeight: 'bold',
-},
-
+    marginLeft: 10,
+    padding: 8,
+    borderRadius: 8,
+  },
+  deleteText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
 });
