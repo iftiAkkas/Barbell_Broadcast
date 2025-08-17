@@ -1,4 +1,3 @@
-// ExerciseGraphScreen.js
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -6,12 +5,13 @@ import { LineChart } from 'react-native-chart-kit';
 
 const screenWidth = Dimensions.get('window').width;
 
+// Strength score formula
 function calculateStrengthScore(weight, reps) {
   return weight * Math.pow(1 + reps / 40, 1.1);
 }
 
 export default function ExerciseGraphScreen({ route }) {
-  const { selectedDay, exerciseName } = route.params;
+  const { exerciseName } = route.params;
   const [dataPoints, setDataPoints] = useState([]);
 
   useEffect(() => {
@@ -19,48 +19,73 @@ export default function ExerciseGraphScreen({ route }) {
       const stored = await AsyncStorage.getItem('logs');
       const all = stored ? JSON.parse(stored) : {};
 
-      const points = Object.entries(all)
-        .filter(([_, val]) => val[selectedDay])
-        .map(([date, val]) => {
-          const log = val[selectedDay]?.log?.[exerciseName];
-          if (log && log.length > 0) {
-            const { reps, weight } = log[0]; // first set only
-            const score = calculateStrengthScore(parseFloat(weight), parseFloat(reps));
-            return { date, score: Math.round(score) };
-          }
-          return null;
-        })
-        .filter((point) => point !== null)
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
+      const points = [];
 
+      Object.entries(all).forEach(([date, dayData]) => {
+        Object.values(dayData).forEach((entry) => {
+          // Routine exercises
+     const sets = entry.log?.[exerciseName];
+        if (sets && sets.length > 0) {
+          const { reps, weight } = sets[0]; // use first set
+
+          const repsNum = parseFloat(reps);
+          const weightNum = parseFloat(weight);
+
+          if (!isNaN(repsNum) && !isNaN(weightNum)) {
+            const score = calculateStrengthScore(weightNum, repsNum);
+            points.push({ date, score: Math.round(score) });
+          }
+}
+
+
+          // Additional exercises
+     entry.additionalExercises?.forEach((ae) => {
+  if (ae.name === exerciseName && ae.sets.length > 0) {
+    const { reps, weight } = ae.sets[0];
+
+    const repsNum = parseFloat(reps);
+    const weightNum = parseFloat(weight);
+
+    if (!isNaN(repsNum) && !isNaN(weightNum)) {
+      const score = calculateStrengthScore(weightNum, repsNum);
+      points.push({ date, score: Math.round(score) });
+    }
+  }
+});
+
+        });
+      });
+
+      points.sort((a, b) => new Date(a.date) - new Date(b.date));
       setDataPoints(points);
     };
 
     loadLogs();
-  }, [selectedDay, exerciseName]);
+  }, [exerciseName]);
 
-  const chartData = {
-    labels: dataPoints.map((pt) => pt.date.slice(5)),
-    datasets: [
-      {
-        data: dataPoints.map((pt) => pt.score),
-        strokeWidth: 2,
-      },
-    ],
-  };
+const chartData = {
+  labels: dataPoints.map((pt) => pt.date.slice(5).replace('-', '/')), // MM/DD
+  datasets: [
+    {
+      data: dataPoints.map((pt) => pt.score),
+      strokeWidth: 2,
+    },
+  ],
+};
 
-  const chartConfig = {
-  backgroundGradientFrom: '#f2f2f2',
-  backgroundGradientTo: '#f2f2f2',
-  color: (opacity = 1) => `rgba(0, 123, 255, ${opacity})`,
-  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-  strokeWidth: 3,
+
+const chartConfig = {
+  backgroundGradientFrom: '#f5f5f5',
+  backgroundGradientTo: '#f5f5f5',
   decimalPlaces: 0,
+  color: () => '#007bff',
+  labelColor: () => '#000',
   propsForDots: {
-    r: '3',
+    r: '5',
     strokeWidth: '2',
     stroke: '#007bff',
   },
+  formatYLabel: () => '', // ❌ Hide Y-axis labels
 };
 
 
@@ -68,35 +93,25 @@ export default function ExerciseGraphScreen({ route }) {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Progress for: {exerciseName}</Text>
       {dataPoints.length > 0 ? (
-        <LineChart
-          data={chartData}
-          width={screenWidth - 32}
-          height={250}
-          yAxisLabel=""
-          yAxisSuffix=""
-          chartConfig={chartConfig}
-         
-          style={styles.chart}
-        />
+     <LineChart
+  data={chartData}
+  width={screenWidth - 32}
+  height={250}
+  chartConfig={chartConfig}
+  bezier
+  withVerticalLabels={false}     // ❌ Hides Y-axis labels
+  withHorizontalLabels={true}    // ✅ Keeps X-axis labels (dates)
+  withDots
+  withShadow
+  style={styles.chart}
+/>
+
       ) : (
         <Text style={styles.noData}>No logs available for this exercise yet.</Text>
       )}
     </ScrollView>
   );
 }
-
-const chartConfig = {
-  backgroundGradientFrom: '#f5f5f5',
-  backgroundGradientTo: '#f5f5f5',
-  decimalPlaces: 0,
-  color: (opacity = 1) => `rgba(0, 0, 255, ${opacity})`,
-  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-  propsForDots: {
-    r: '5',
-    strokeWidth: '2',
-    stroke: '#007bff',
-  },
-};
 
 const styles = StyleSheet.create({
   container: {
@@ -107,6 +122,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 20,
+    color: '#003366',
   },
   chart: {
     borderRadius: 12,

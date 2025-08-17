@@ -7,8 +7,8 @@ import {
   ScrollView,
   StyleSheet,
   Alert,
-  KeyboardAvoidingView,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
@@ -38,25 +38,15 @@ export default function ExerciseLogScreen({ navigation }) {
     }
   }, [routine, selectedDay, logDate]);
 
-  const loadLog = async () => {
-    const stored = await AsyncStorage.getItem('logs');
-    const all = stored ? JSON.parse(stored) : {};
-    const entry = all[logDate]?.[selectedDay];
+const loadLog = async () => {
+  const base = {};
+  (routine?.exercises[selectedDay] || []).forEach((ex) => {
+    base[ex] = [{ reps: '', weight: '' }];
+  });
+  setLog(base);
+  setAdditionalExercises([]);
+};
 
-    if (entry) {
-      setLog(entry.log || {});
-      setAdditionalExercises(entry.additionalExercises || []);
-      setIsEditing(false);
-    } else {
-      const base = {};
-      (routine?.exercises[selectedDay] || []).forEach((ex) => {
-        base[ex] = [{ reps: '', weight: '' }];
-      });
-      setLog(base);
-      setAdditionalExercises([]);
-      setIsEditing(true);
-    }
-  };
 
   const loadLogsForDay = async () => {
     const stored = await AsyncStorage.getItem('logs');
@@ -140,14 +130,21 @@ export default function ExerciseLogScreen({ navigation }) {
 
   if (!routine) return null;
 
-  const { selectedDays, dayTitles, exercises } = routine;
+  const { selectedDays, dayTitles } = routine;
 
   return (
-    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={styles.container}>
+<KeyboardAvoidingView
+  behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+  keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+  style={{ flex: 1 }}
+>
+  <ScrollView
+    contentContainerStyle={styles.container}
+    keyboardShouldPersistTaps="handled"
+  >
         <Text style={styles.title}>Select a Day</Text>
         <View style={styles.daysContainer}>
-          {selectedDays.map((day) => (
+          {(selectedDays || []).map((day) => (
             <TouchableOpacity
               key={day}
               style={[styles.dayButton, selectedDay === day && styles.daySelected]}
@@ -284,66 +281,67 @@ export default function ExerciseLogScreen({ navigation }) {
               </TouchableOpacity>
             )}
 
-            {isEditing ? (
-              <TouchableOpacity style={styles.saveBtn} onPress={saveLog}>
-                <Text style={styles.saveText}>Save Workout</Text>
-              </TouchableOpacity>
-            ) : (
+           <TouchableOpacity style={styles.saveBtn} onPress={saveLog}>
+         <Text style={styles.saveText}>Save Workout</Text>
+        </TouchableOpacity>
+
+
+            {logsForDay.length > 0 && (
               <>
-                <TouchableOpacity style={styles.editBtn} onPress={() => setIsEditing(true)}>
-                  <Text style={styles.saveText}>Edit</Text>
-                </TouchableOpacity>
+                <Text style={styles.subtitle}>Previous Logs</Text>
+                {logsForDay
+                  .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+                  .map(([date, data], index) => {
+                    const dayLog = data[selectedDay];
+                    if (!dayLog) return null;
+
+                    return (
+                      <View key={index} style={styles.previousLogBlock}>
+                        <Text style={styles.previousLogDate}>{date}</Text>
+
+                        {Object.entries(dayLog.log).map(([ex, sets], i) => (
+                          <View key={i} style={{ marginBottom: 4 }}>
+                          <Text
+                            style={styles.exerciseTitle}
+                            onPress={() => navigation.navigate('ExerciseGraph', { exerciseName: ex })}
+                          >
+                            {ex}
+                          </Text>
+
+
+                                      {sets.map((s, idx) => (
+                              <Text key={idx} style={styles.readOnlyText}>
+                                Set {idx + 1}: {s.reps} reps × {s.weight} kg
+                              </Text>
+                            ))}
+                          </View>
+                        ))}
+
+                        {dayLog.additionalExercises?.map((ae, i) => (
+                          <View key={`a-${i}`}>
+                            <Text style={styles.exerciseTitle}>{ae.name}</Text>
+                            {ae.sets.map((set, idx) => (
+                              <Text key={idx} style={styles.readOnlyText}>
+                                Set {idx + 1}: {set.reps} reps × {set.weight} kg
+                              </Text>
+                            ))}
+                          </View>
+                        ))}
+
+                        <View style={styles.previousLogButtons}>
+                          <TouchableOpacity onPress={() => editLogEntry(date)}>
+                            <Text style={[styles.addText, { marginRight: 10 }]}>Edit</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={() => deleteLogEntry(date)}>
+                            <Text style={[styles.addText, { color: 'red' }]}>Delete</Text>
+                          </TouchableOpacity>
+                        </View>
+                        <View style={styles.separator} />
+                      </View>
+                    );
+                  })}
               </>
             )}
-            <Text style={styles.subtitle}>Previous Logs</Text>
-{logsForDay
-  .sort((a, b) => new Date(b[0]) - new Date(a[0]))
-  .map(([date, entry], i) => {
-    const val = entry[selectedDay];
-    if (!val) return null;
-
-    return (
-      <View key={i} style={styles.logCard}>
-        <Text style={styles.logDate}>{date}</Text>
-
-        {/* Main Exercises */}
-        {Object.entries(val.log || {}).map(([ex, sets], j) => (
-          <TouchableOpacity
-            key={j}
-            onPress={() =>
-              navigation.navigate('ExerciseGraph', {
-                exerciseName: ex,
-                logsForDay: logsForDay,
-                selectedDay: selectedDay,
-              })
-            }
-          >
-            <Text style={styles.logExercise}>
-              {ex}: {sets.map((s, si) => `Set ${si + 1}: ${s.reps}x${s.weight}`).join(', ')}
-            </Text>
-          </TouchableOpacity>
-        ))}
-
-        {/* Additional Exercises */}
-        {(val.additionalExercises || []).map((ae, j) => (
-          <Text key={`ae-${j}`} style={styles.logExercise}>
-            {ae.name}: {ae.sets.map((s, si) => `Set ${si + 1}: ${s.reps}x${s.weight}`).join(', ')}
-          </Text>
-        ))}
-
-        {/* Edit / Delete Buttons */}
-        <View style={styles.logButtonRow}>
-          <TouchableOpacity style={styles.editBtnSmall} onPress={() => editLogEntry(date)}>
-            <Text style={styles.editText}>Edit</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.deleteBtnSmall} onPress={() => deleteLogEntry(date)}>
-            <Text style={styles.deleteText}>Delete</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  })}
-
           </>
         )}
       </ScrollView>
@@ -437,7 +435,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   editBtn: {
-    backgroundColor: '#07d2ffff',
+    backgroundColor: '#ffc107',
     padding: 12,
     borderRadius: 6,
     alignItems: 'center',
@@ -451,27 +449,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#ccc',
     marginTop: 10,
   },
-  logCard: {
-  backgroundColor: '#fff',
-  padding: 12,
-  borderRadius: 8,
-  marginBottom: 16,
-  elevation: 2,
-  shadowColor: '#000',
-  shadowOpacity: 0.1,
-  shadowRadius: 3,
-  shadowOffset: { width: 0, height: 2 },
-},
-logExercise: {
-  fontSize: 15,
-  color: '#007bff',
-  marginVertical: 2,
-},
-logButtonRow: {
-  flexDirection: 'row',
-  justifyContent: 'flex-start',
-  marginTop: 10,
-  gap: 10,
-},
-
+  previousLogBlock: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 6,
+  },
+  previousLogDate: {
+    fontWeight: 'bold',
+    color: '#003366',
+    marginBottom: 6,
+  },
+  previousLogButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    marginTop: 6,
+  },
 });
