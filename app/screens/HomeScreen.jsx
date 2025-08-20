@@ -19,22 +19,22 @@ export default function HomeScreen() {
   const buttons = [
     {
       label: 'Workout Log',
-      icon: 'https://cdn-icons-png.flaticon.com/128/4721/4721130.png',
+      icon: require('../../assets/workout.png'),
       screen: 'ExerciseLog',
     },
     {
       label: 'Routine',
-      icon: 'https://cdn-icons-png.flaticon.com/128/3476/3476097.png',
+        icon: require('../../assets/workoutlog.png'),
       screen: 'Routine',
     },
     {
       label: 'Trackers',
-      icon: 'https://cdn-icons-png.flaticon.com/128/2083/2083582.png',
+       icon: require('../../assets/trackers.png'),
       screen: 'TrackerList',
     },
     {
       label: 'Personal Info',
-      icon: 'https://cdn-icons-png.flaticon.com/128/4117/4117081.png',
+       icon: require('../../assets/personal.png'),
       screen: 'PersonalInfo',
     },
   ];
