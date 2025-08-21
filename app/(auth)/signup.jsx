@@ -1,28 +1,27 @@
+import { FontAwesome } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { Picker } from '@react-native-picker/picker';
+import { useRouter } from 'expo-router';
+import {
+  createUserWithEmailAndPassword,
+  fetchSignInMethodsForEmail,
+  updateProfile,
+} from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import React, { useState } from 'react';
 import {
-  View,
-  TextInput,
-  Button,
-  Text,
-  StyleSheet,
   Alert,
-  TouchableOpacity,
+  Button,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import {
-  createUserWithEmailAndPassword,
-  updateProfile,
-  fetchSignInMethodsForEmail,
-} from 'firebase/auth';
-import { auth } from '../../firebase/config';
-import { useRouter } from 'expo-router';
-import { FontAwesome } from '@expo/vector-icons';
-import { db } from '../../firebase/config';
-import { doc, setDoc } from 'firebase/firestore';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { Picker } from '@react-native-picker/picker';
+import { auth, db } from '../../firebase/config';
 
 // ===== helpers (keep outside component) =====
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
@@ -90,7 +89,7 @@ export default function Signup() {
       });
 
       Alert.alert('Account created!');
-      router.replace('/(auth)/login');
+      router.replace('/(tabs)/omi');
     } catch (error) {
       // friendlier Firebase errors
       const code = error?.code || '';
