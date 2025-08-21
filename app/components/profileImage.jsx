@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import app from '../../firebase/config';
 
-export default function ProfileImage({ onPress, big }) {
+export default function ProfileImage({ onPress }) {
   const [profileImage, setProfileImage] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -48,13 +48,11 @@ export default function ProfileImage({ onPress, big }) {
   );
 
   if (loading) {
-    return (
-      <ActivityIndicator style={big ? styles.bigLoading : styles.loading} />
-    );
+    return <ActivityIndicator style={styles.loading} />;
   }
 
   return (
-    <View style={big ? styles.bigWrapper : styles.wrapper}>
+    <View style={styles.wrapper}>
       <TouchableOpacity onPress={onPress}>
         <Image
           source={
@@ -62,7 +60,7 @@ export default function ProfileImage({ onPress, big }) {
               ? { uri: profileImage }
               : require('../../assets/man.png')
           }
-          style={big ? styles.bigImage : styles.image}
+          style={styles.image}
         />
       </TouchableOpacity>
     </View>
@@ -71,32 +69,18 @@ export default function ProfileImage({ onPress, big }) {
 
 const styles = StyleSheet.create({
   wrapper: {
-    marginLeft: 150,
     flexDirection: 'row',
     alignItems: 'center',
     height: 50,
-    width: 40,
-  },
-  bigWrapper: {
-    alignItems: 'center',
-    marginBottom: 20,
-    height: 100,
-    width: 100,
+    width: 50,
   },
   image: {
-    width: 40,
+    width: 40,   // fixed size
     height: 40,
-    borderRadius: 36,
-  },
-  bigImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    borderRadius: 25,
+    marginLeft:20 // circular
   },
   loading: {
     marginLeft: 15,
-  },
-  bigLoading: {
-    marginBottom: 20,
   },
 });
