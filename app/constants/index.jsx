@@ -1,5 +1,5 @@
 export const rapidApiKey = 'ae07f27a71msh50051c3283b407dp1eb9cbjsnb9ddbb2e9629';
-
+export const geminiApiKey = 'AIzaSyBDEBN6hDxPghurNO62AkHj7C7Ogma2eAs';
 export const sliderImages = [
     {image: require('../../assets/slide1.png')},
     {image: require('../../assets/slide2.png')},

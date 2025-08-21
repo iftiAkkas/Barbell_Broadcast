@@ -1,5 +1,5 @@
 // app/(tabs)/_layout.js
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 
 export default function Layout() {
@@ -22,6 +22,20 @@ export default function Layout() {
           title: "Exercises",
           tabBarIcon: ({ focused, color, size }) => (
             <Ionicons name={focused ? 'fitness' : 'fitness-outline'} size={size*1.2} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="chatBot"   // must match the filename: chatBot.jsx
+        options={{
+          title: "Chatbot",
+          tabBarIcon: ({ focused, color, size }) => (
+            <MaterialCommunityIcons
+              name={focused ? "robot" : "robot-outline"} // valid icons
+              size={size * 1.2}
+              color={color}
+            />
           ),
         }}
       />
