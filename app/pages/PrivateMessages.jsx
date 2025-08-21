@@ -49,12 +49,11 @@ export default function PrivateMessages() {
     return () => backHandler.remove();
   }, [searchMode]);
 
-  // 🔹 Load all users
+  // 🔹 Realtime load all users (FIXED)
   useEffect(() => {
     if (!currentUserId) return;
 
-    import("firebase/firestore").then(async (fb) => {
-      const snapshot = await fb.getDocs(fb.collection(db, "users"));
+    const unsub = onSnapshot(collection(db, "users"), (snapshot) => {
       const list = snapshot.docs
         .filter((doc) => doc.id !== currentUserId)
         .map((doc) => ({
@@ -65,6 +64,8 @@ export default function PrivateMessages() {
       setUsers(list);
       setLoading(false);
     });
+
+    return () => unsub();
   }, [currentUserId]);
 
   // 🔹 Realtime messages for each user
@@ -95,7 +96,6 @@ export default function PrivateMessages() {
           latestMessage = latest.text || "Media";
           latestCreatedAt = latest.createdAt?.toMillis?.() || Date.now();
 
-          // 🔹 Check if unread (sender is not me + not read)
           if (latest.senderId !== currentUserId && !latest.read) {
             isUnread = true;
           }
@@ -103,13 +103,13 @@ export default function PrivateMessages() {
 
         setChattedUsers((prev) => {
           const filtered = prev.filter((cu) => cu.id !== u.id);
-          if (latestCreatedAt === 0) return filtered; // no messages, don't add
+          if (latestCreatedAt === 0) return filtered;
           return [
             ...filtered,
             {
               id: u.id,
               userName: u.userName,
-              profileImage: u.profileImage,
+              profileImage: u.profileImage, // 🔥 profile updates will reflect instantly
               latestMessage,
               latestCreatedAt,
               isUnread,
@@ -166,7 +166,7 @@ export default function PrivateMessages() {
         <Text
           style={[
             styles.lastMessage,
-            { color: item.isUnread ? "blue" : "black" }, // unread blue, read black
+            { color: item.isUnread ? "blue" : "black" },
           ]}
           numberOfLines={1}
         >
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   avatar: { width: 50, height: 50, borderRadius: 25, marginRight: 12 },
   chatDetails: { flex: 1 },
   userName: { fontWeight: "bold", fontSize: 16, marginBottom: 2 },
-  lastMessage: { fontSize: 14, fontWeight: "500" }, // color applied dynamically
+  lastMessage: { fontSize: 14, fontWeight: "500" },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   noConversationContainer: {
     flex: 1,

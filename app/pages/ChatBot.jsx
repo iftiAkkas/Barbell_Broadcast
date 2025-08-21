@@ -5,11 +5,12 @@ import {
   onSnapshot, 
   orderBy, 
   query, 
-  serverTimestamp 
+  serverTimestamp, 
+  doc, 
+  getDoc 
 } from 'firebase/firestore';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Button,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -19,10 +20,10 @@ import {
   View,
   SafeAreaView,
   Image,
+  TouchableOpacity,
 } from 'react-native';
 import { db, auth } from '../../firebase/config'; 
 import { geminiApiKey } from '../constants';
-import { doc, getDoc } from 'firebase/firestore';
 
 // --- fetch profile image helper
 const getUserProfileImage = async (uid) => {
@@ -149,6 +150,7 @@ export default function ChatBot() {
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 70}
       >
         <ScrollView
           style={styles.chatContainer}
@@ -156,6 +158,7 @@ export default function ChatBot() {
           onContentSizeChange={() =>
             scrollViewRef.current.scrollToEnd({ animated: true })
           }
+          keyboardShouldPersistTaps="handled"
         >
           {messages.map((message, index) => (
             <View
@@ -187,14 +190,19 @@ export default function ChatBot() {
           ))}
         </ScrollView>
 
+        {/* Input Bar */}
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
             value={input}
             onChangeText={setInput}
             placeholder="Type your message..."
+            returnKeyType="send"
+            onSubmitEditing={handleSend}
           />
-          <Button title="Send" onPress={handleSend} />
+          <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+            <Text style={styles.sendText}>Send</Text>
+          </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -204,7 +212,7 @@ export default function ChatBot() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#f5f5f5' },
   container: { flex: 1, paddingHorizontal: 10, backgroundColor: '#f5f5f5' },
-  chatContainer: { flex: 1, marginBottom: 10,marginTop: 50 },
+  chatContainer: { flex: 1, marginBottom: 10, marginTop: 50 },
   messageRow: { flexDirection: 'row', alignItems: 'flex-end', marginVertical: 5 },
   userRow: { justifyContent: 'flex-end' },
   botRow: { justifyContent: 'flex-start' },
@@ -217,14 +225,29 @@ const styles = StyleSheet.create({
   userMessage: { backgroundColor: '#d1e7dd' },
   botMessage: { backgroundColor: '#e5e5ea' },
   messageText: { fontSize: 16 },
-  inputContainer: { flexDirection: 'row', alignItems: 'center', paddingBottom: 5 },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+    paddingHorizontal: 10,
+    backgroundColor: '#fff',
+    marginBottom:30,
+  },
   input: {
     flex: 1,
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 10,
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
     marginRight: 10,
     backgroundColor: '#fff',
   },
+  sendButton: {
+    backgroundColor: '#007bff',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  sendText: { color: '#fff', fontWeight: '600' },
 });
