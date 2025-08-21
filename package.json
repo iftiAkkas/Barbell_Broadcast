@@ -36,6 +36,7 @@
     "expo-web-browser": "~14.2.0",
     "firebase": "^11.10.0",
     "lottie-react-native": "7.2.2",
+    "lucide-react-native": "^0.540.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.5",
