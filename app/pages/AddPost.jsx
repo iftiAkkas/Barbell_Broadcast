@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     left: 0,
   },
   backButtonText: {
-    fontSize: 20,
+    fontSize: 35,
     color: '#3b82f6',
     fontWeight: '600',
     paddingHorizontal: 10,
@@ -289,8 +289,8 @@ const styles = StyleSheet.create({
   },
   postButton: {
     backgroundColor: '#3b82f6',
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
     alignItems: 'center',
     marginBottom: 40,
   },
