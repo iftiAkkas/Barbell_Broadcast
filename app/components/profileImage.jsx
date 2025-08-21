@@ -74,14 +74,14 @@ const styles = StyleSheet.create({
     marginLeft: 150,
     flexDirection: 'row',
     alignItems: 'center',
-    height: 200,
-    width: 200,
+    height: 50,
+    width: 40,
   },
   bigWrapper: {
     alignItems: 'center',
     marginBottom: 20,
-    height: 200,
-    width: 200,
+    height: 100,
+    width: 100,
   },
   image: {
     width: 40,
