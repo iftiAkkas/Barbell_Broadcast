@@ -19,29 +19,32 @@ export default function HomeScreen() {
   const buttons = [
     {
       label: 'Workout Log',
-      icon: require('../../assets/workout.png'),
+      icon: require('../../assets/w2.png'),
       screen: 'ExerciseLog',
     },
     {
       label: 'Routine',
-        icon: require('../../assets/workoutlog.png'),
+      icon: require('../../assets/exercise-routine.png'),
       screen: 'Routine',
     },
     {
       label: 'Trackers',
-       icon: require('../../assets/trackers.png'),
+      icon: require('../../assets/t2.png'),
       screen: 'TrackerList',
     },
     {
       label: 'Personal Info',
-       icon: require('../../assets/personal.png'),
+      icon: require('../../assets/pi.png'),
       screen: 'PersonalInfo',
     },
   ];
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContainer}>
-      {/* Welcome Back with custom styles */}
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.scrollContainer}
+    >
+      {/* Welcome Back */}
       <View style={styles.welcomeContainer}>
         <Text style={styles.welcomeBlue}>Welcome</Text>
         <Text style={styles.welcomeWhite}>Back</Text>
@@ -57,10 +60,13 @@ export default function HomeScreen() {
             onPress={() => navigation.navigate(screen)}
             activeOpacity={0.85}
           >
-            <Image
-              source={typeof icon === 'string' ? { uri: icon } : icon}
-              style={styles.icon}
-            />
+            <View style={styles.iconWrapper}>
+              <Image
+                source={typeof icon === 'string' ? { uri: icon } : icon}
+                style={styles.icon}
+                resizeMode="contain"
+              />
+            </View>
             <Text style={styles.buttonLabel}>{label}</Text>
           </TouchableOpacity>
         ))}
@@ -72,7 +78,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white', // light and clean
+    backgroundColor: 'white',
   },
   scrollContainer: {
     padding: 20,
@@ -80,12 +86,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  // New styles for Welcome Back
+  // Welcome Back
   welcomeContainer: {
     flexDirection: 'row',
     marginBottom: 10,
-    marginTop: 50,
-    //alignItems: 'center',
+    marginTop: 30,
   },
   welcomeBlue: {
     backgroundColor: '#3b82f6',
@@ -96,8 +101,6 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderTopLeftRadius: 8,
     borderBottomLeftRadius: 8,
-    //marginRight: 4,
-    alignItems: 'center',
   },
   welcomeWhite: {
     backgroundColor: 'white',
@@ -132,7 +135,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 15,
-    color: '#3b82f6',
 
     // iOS shadow
     shadowColor: '#000',
@@ -143,10 +145,19 @@ const styles = StyleSheet.create({
     // Android shadow
     elevation: 5,
   },
+  iconWrapper: {
+    width: BUTTON_SIZE * 0.55 + 10,
+    height: BUTTON_SIZE * 0.55 + 10,
+    borderRadius: (BUTTON_SIZE * 0.55 + 10) / 2,
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   icon: {
     width: BUTTON_SIZE * 0.55,
     height: BUTTON_SIZE * 0.55,
-    marginBottom: 12,
+    tintColor: '#3b82f6', // icons will be blue inside white circle
   },
   buttonLabel: {
     color: 'white',
