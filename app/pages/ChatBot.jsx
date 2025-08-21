@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import React, { useRef, useState } from 'react';
 import {
     Button,
@@ -10,6 +11,7 @@ import {
     TextInput,
     View,
 } from 'react-native';
+import { db } from '../../firebase/config'; // adjust the path if needed
 import { geminiApiKey } from '../constants';
 
 export default function ChatBot() {
@@ -17,12 +19,26 @@ export default function ChatBot() {
   const [input, setInput] = useState('');
   const scrollViewRef = useRef();
 
+  // Save message to Firestore
+  const saveMessageToFirestore = async (message) => {
+    try {
+      await addDoc(collection(db, 'chatMessages'), {
+        sender: message.sender,
+        text: message.text,
+        createdAt: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error('Error saving message to Firestore:', error);
+    }
+  };
+
   const handleSend = async () => {
     if (!input.trim()) return;
 
-    // Add user message to chat
+    // User message
     const userMessage = { sender: 'user', text: input };
     setMessages((prev) => [...prev, userMessage]);
+    saveMessageToFirestore(userMessage);
 
     try {
       // Call Gemini API
@@ -43,15 +59,13 @@ export default function ChatBot() {
         }
       );
 
-      console.log('API response:', response.data);
-
-      // Extract bot reply safely
       const botReply =
         response.data?.candidates?.[0]?.content?.parts?.[0]?.text ||
         'No response from the bot.';
 
       const botMessage = { sender: 'bot', text: botReply };
       setMessages((prev) => [...prev, botMessage]);
+      saveMessageToFirestore(botMessage);
     } catch (error) {
       console.error('Error communicating with API:', error);
       const errorMessage = {
@@ -59,6 +73,7 @@ export default function ChatBot() {
         text: 'Sorry, something went wrong. Please try again later.',
       };
       setMessages((prev) => [...prev, errorMessage]);
+      saveMessageToFirestore(errorMessage);
     }
 
     setInput('');
@@ -81,13 +96,16 @@ export default function ChatBot() {
             key={index}
             style={[
               styles.message,
-              message.sender === 'user' ? styles.userMessage : styles.botMessage,
+              message.sender === 'user'
+                ? styles.userMessage
+                : styles.botMessage,
             ]}
           >
             <Text style={styles.messageText}>{message.text}</Text>
           </View>
         ))}
       </ScrollView>
+
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
