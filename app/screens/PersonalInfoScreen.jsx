@@ -339,14 +339,14 @@ return (
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20 },
+  container: { padding: 20, },
   label: { fontSize: 16, fontWeight: '600', marginTop: 16 },
   input: {
     borderWidth: 1,
     borderRadius: 6,
     padding: 10,
     marginTop: 6,
-    backgroundColor: '#fff',
+    backgroundColor: '#fffcfcff',
   },
   genderRow: { flexDirection: 'row', marginTop: 10 },
   genderBtn: {
@@ -375,12 +375,11 @@ const styles = StyleSheet.create({
   marginTop: 6,
 },
   prBtn: {
-    backgroundColor: '#7ce2f1ff',
+    backgroundColor: '#3b82f6',
     padding: 12,
     borderRadius: 6,
     marginTop: 30,
     alignItems: 'center',
-   
   },
   btnLabel:{
      color: 'white',
@@ -394,7 +393,7 @@ prItemRow: {
 },
 prItemText: {
   fontSize: 15,
-  color: '#333',
+  color: '#010101ff',
   
 },
 deleteText: {
@@ -402,7 +401,7 @@ deleteText: {
   marginLeft: 10,
 },
   saveBtn: {
-    backgroundColor: '#28a745',
+    backgroundColor: '#3b82f6',
     padding: 14,
     borderRadius: 6,
     marginTop: 30,
@@ -410,10 +409,10 @@ deleteText: {
   },
   
   saveText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  editBtn: { fontSize: 16, color: '#007bff' },
+  editBtn: { fontSize: 16, color: '#3b82f6' },
   calories: {
     fontSize: 16,
-    color: '#333',
+    color: '#050505ff',
     marginTop: 6,
     fontWeight: '600',
   },
@@ -460,14 +459,20 @@ prItemRow: {
 prItemText: {
   fontSize: 15,
   flex: 1,
+  
+},
+prBtnText:{
+  color: 'white',
+  fontWeight: 500,
 },
 topPRItem: {
   marginBottom: 8,
   fontSize: 15,
+  fontWeight: 500,
 },
 
 TopPRLabel:{
-   fontSize: 15,
+   fontSize: 17,
    fontWeight: "600",
    marginLeft: 6,
    marginTop: 15,
@@ -531,7 +536,5 @@ modalScroll: {
   maxHeight: 200,
   marginBottom: 10,
 },
-
-
 
 });

@@ -19,22 +19,22 @@ export default function HomeScreen() {
   const buttons = [
     {
       label: 'Workout Log',
-      icon: 'https://cdn-icons-png.flaticon.com/128/4721/4721130.png',
+      icon: require('../../assets/workout.png'),
       screen: 'ExerciseLog',
     },
     {
       label: 'Routine',
-      icon: 'https://cdn-icons-png.flaticon.com/128/3476/3476097.png',
+        icon: require('../../assets/workoutlog.png'),
       screen: 'Routine',
     },
     {
       label: 'Trackers',
-      icon: 'https://cdn-icons-png.flaticon.com/128/2083/2083582.png',
+       icon: require('../../assets/trackers.png'),
       screen: 'TrackerList',
     },
     {
       label: 'Personal Info',
-      icon: 'https://cdn-icons-png.flaticon.com/128/4117/4117081.png',
+       icon: require('../../assets/personal.png'),
       screen: 'PersonalInfo',
     },
   ];
@@ -84,6 +84,7 @@ const styles = StyleSheet.create({
   welcomeContainer: {
     flexDirection: 'row',
     marginBottom: 10,
+    marginTop: 50,
     //alignItems: 'center',
   },
   welcomeBlue: {
@@ -114,7 +115,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 17,
     color: '#6b7280',
-    marginBottom: 80,
+    marginBottom: 60,
     textAlign: 'center',
   },
   gridContainer: {
@@ -143,8 +144,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   icon: {
-    width: BUTTON_SIZE * 0.4,
-    height: BUTTON_SIZE * 0.4,
+    width: BUTTON_SIZE * 0.55,
+    height: BUTTON_SIZE * 0.55,
     marginBottom: 12,
   },
   buttonLabel: {

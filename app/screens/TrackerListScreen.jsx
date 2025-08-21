@@ -160,18 +160,18 @@ useFocusEffect(
 
 const styles = StyleSheet.create({
   container: { padding: 20 },
-  header: { fontSize: 22, fontWeight: 'bold', marginBottom: 20 },
+  header: {color: '#023b96ff', fontSize: 22, fontWeight: 'bold', marginBottom: 20 },
   trackerItem: {
-    backgroundColor: '#f2f2f2',
+    backgroundColor: '#3b82f6',
     padding: 15,
     borderRadius: 8,
     marginVertical: 6,
   },
-  trackerName: { fontWeight: 'bold', fontSize: 16 },
-  goalLine: { color: '#555', marginTop: 4 },
-  editText: { color: '#007bff', fontWeight: '600' },
+  trackerName: { color: 'white', fontWeight: 'bold', fontSize: 16 },
+  goalLine: { color: '#ffffffff', marginTop: 4 },
+  editText: { color: '#ffffffff', fontWeight: '600' },
   addNewBtn: {
-    backgroundColor: '#28a745',
+    backgroundColor: '#3b82f6',
     padding: 12,
     borderRadius: 6,
     alignItems: 'center',
@@ -180,11 +180,11 @@ const styles = StyleSheet.create({
   addNewText: { color: '#fff', fontWeight: 'bold' },
   formContainer: {
     marginTop: 20,
-    backgroundColor: '#e8e8e8',
+    backgroundColor: '#3b82f6',
     padding: 16,
     borderRadius: 10,
   },
-  formHeader: { fontSize: 18, fontWeight: '600', marginBottom: 10 },
+  formHeader: { color: 'white', fontSize: 18, fontWeight: '600', marginBottom: 10 },
   input: {
     borderWidth: 1,
     padding: 10,
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
   buttonRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
   saveBtn: {
     flex: 1,
-    backgroundColor: '#007bff',
+    backgroundColor: '#ffffffff',
     padding: 10,
     marginRight: 6,
     borderRadius: 6,
@@ -203,11 +203,11 @@ const styles = StyleSheet.create({
   },
   cancelBtn: {
     flex: 1,
-    backgroundColor: '#6c757d',
+    backgroundColor: '#b8bfe5ff',
     padding: 10,
     marginLeft: 6,
     borderRadius: 6,
     alignItems: 'center',
   },
-  btnText: { color: '#fff', fontWeight: 'bold' },
+  btnText: { color:'#3b82f6', fontWeight: 'bold' },
 });
