@@ -135,12 +135,12 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    marginTop: 50,
+    //marginTop: 5,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: 18,
     backgroundColor: '#0d6efd',
   },
   profileImageWrapper: {
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   messageList: {
-    padding: 10,
+    padding: 20,
   },
   messageBubble: {
     padding: 10,
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: '#ddd',
     backgroundColor: '#fff',
-    marginBottom: 70,
+    marginBottom: 50,
   },
   input: {
     flex: 1,
