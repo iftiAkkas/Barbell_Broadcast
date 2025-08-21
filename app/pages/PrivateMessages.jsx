@@ -23,8 +23,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import DefaultAvatar from "../../assets/man.png";
 
 export default function PrivateMessages() {
-  const [users, setUsers] = useState([]); // all users
-  const [chattedUsers, setChattedUsers] = useState([]); // realtime list
+  const [users, setUsers] = useState([]);
+  const [chattedUsers, setChattedUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [searchMode, setSearchMode] = useState(false);
@@ -49,7 +49,7 @@ export default function PrivateMessages() {
     return () => backHandler.remove();
   }, [searchMode]);
 
-  // 🔹 Realtime load all users (FIXED)
+  // 🔹 Realtime load all users
   useEffect(() => {
     if (!currentUserId) return;
 
@@ -109,7 +109,7 @@ export default function PrivateMessages() {
             {
               id: u.id,
               userName: u.userName,
-              profileImage: u.profileImage, // 🔥 profile updates will reflect instantly
+              profileImage: u.profileImage,
               latestMessage,
               latestCreatedAt,
               isUnread,

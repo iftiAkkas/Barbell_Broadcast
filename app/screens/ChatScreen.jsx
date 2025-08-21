@@ -20,6 +20,7 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  writeBatch,
 } from 'firebase/firestore';
 
 export default function ChatScreen() {
@@ -48,12 +49,26 @@ export default function ChatScreen() {
       orderBy('createdAt', 'asc')
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
       const msgs = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
       setMessages(msgs);
+
+      // 🔹 Mark unread messages as read
+      const unread = snapshot.docs.filter(
+        (doc) =>
+          doc.data().receiverId === currentUser.uid && !doc.data().read
+      );
+
+      if (unread.length > 0) {
+        const batch = writeBatch(db);
+        unread.forEach((doc) => {
+          batch.update(doc.ref, { read: true });
+        });
+        await batch.commit();
+      }
     });
 
     return () => unsubscribe();
@@ -67,6 +82,7 @@ export default function ChatScreen() {
       senderId: currentUser.uid,
       receiverId: userId,
       createdAt: serverTimestamp(),
+      read: false, // 🔹 new messages are unread by default
     });
 
     setInput('');
@@ -96,7 +112,6 @@ export default function ChatScreen() {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 70}
       >
         <View style={styles.header}>
-          {/* White circular background around profile image */}
           <View style={styles.profileImageWrapper}>
             <Image source={profileImageSource} style={styles.profileImage} />
           </View>
@@ -129,56 +144,33 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  container: {
-    flex: 1,
-    //marginTop: 5,
-  },
+  safeArea: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 18,
+    padding: 20,
     backgroundColor: '#0d6efd',
+    marginTop:15,
   },
   profileImageWrapper: {
     backgroundColor: '#fff',
-    borderRadius: 24, // half of wrapper size for perfect circle
+    borderRadius: 24,
     padding: 2,
     marginRight: 10,
   },
-  profileImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
-  headerText: {
-    fontSize: 18,
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  messageList: {
-    padding: 20,
-  },
+  profileImage: { width: 40, height: 40, borderRadius: 20 },
+  headerText: { fontSize: 18, color: '#fff', fontWeight: 'bold' },
+  messageList: { padding: 20 },
   messageBubble: {
     padding: 10,
     borderRadius: 10,
     marginBottom: 8,
     maxWidth: '70%',
   },
-  myMessage: {
-    backgroundColor: '#DCF8C6',
-    alignSelf: 'flex-end',
-  },
-  theirMessage: {
-    backgroundColor: '#e5e5ea',
-    alignSelf: 'flex-start',
-  },
-  messageText: {
-    fontSize: 16,
-  },
+  myMessage: { backgroundColor: '#DCF8C6', alignSelf: 'flex-end' },
+  theirMessage: { backgroundColor: '#e5e5ea', alignSelf: 'flex-start' },
+  messageText: { fontSize: 16 },
   inputContainer: {
     flexDirection: 'row',
     padding: 10,
