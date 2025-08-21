@@ -7,10 +7,17 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
-import { useFocusEffect } from '@react-navigation/native';
-
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { db, auth } from '../../firebase/config';
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  doc,
+  getDocs,
+  query,
+  where,
+} from 'firebase/firestore';
 
 export default function TrackerListScreen() {
   const [trackers, setTrackers] = useState([]);
@@ -18,68 +25,79 @@ export default function TrackerListScreen() {
   const [name, setName] = useState('');
   const [unit, setUnit] = useState('');
   const [goal, setGoal] = useState('');
-  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingId, setEditingId] = useState(null);
   const navigation = useNavigation();
 
+  const user = auth.currentUser;
 
-  
-useFocusEffect(
-  React.useCallback(() => {
-    loadTrackers();
-  }, [])
-);
+  useFocusEffect(
+    React.useCallback(() => {
+      loadTrackers();
+    }, [])
+  );
 
   useEffect(() => {
     loadTrackers();
   }, []);
 
+  // Fetch trackers from Firestore
   const loadTrackers = async () => {
+    if (!user) return;
     try {
-      const data = await AsyncStorage.getItem('customTrackers');
-      if (data) setTrackers(JSON.parse(data));
+      const q = query(collection(db, 'trackers'), where('userId', '==', user.uid));
+      const querySnap = await getDocs(q);
+
+      const list = [];
+      querySnap.forEach((docSnap) => {
+        list.push({ id: docSnap.id, ...docSnap.data() });
+      });
+
+      setTrackers(list);
     } catch (err) {
       console.error('Failed to load trackers:', err);
     }
   };
 
-  const saveTrackers = async (updated) => {
+  // Save or update tracker
+  const handleAddOrEdit = async () => {
+    if (!name.trim() || !user) return;
+
     try {
-      await AsyncStorage.setItem('customTrackers', JSON.stringify(updated));
-      setTrackers(updated);
+      if (editingId) {
+        const docRef = doc(db, 'trackers', editingId);
+        await updateDoc(docRef, {
+          name: name.trim(),
+          unit,
+          goal,
+        });
+      } else {
+        await addDoc(collection(db, 'trackers'), {
+          userId: user.uid,
+          name: name.trim(),
+          unit,
+          goal,
+        });
+      }
+      resetForm();
+      loadTrackers();
     } catch (err) {
-      console.error('Failed to save trackers:', err);
+      console.error('Error saving tracker:', err);
     }
-  };
-
-  const handleAddOrEdit = () => {
-    if (!name.trim()) return;
-
-    const updated = [...trackers];
-    const newTracker = { name: name.trim(), unit, goal };
-
-    if (editingIndex !== null) {
-      updated[editingIndex] = newTracker;
-    } else {
-      updated.push(newTracker);
-    }
-
-    saveTrackers(updated);
-    resetForm();
   };
 
   const resetForm = () => {
     setName('');
     setUnit('');
     setGoal('');
-    setEditingIndex(null);
+    setEditingId(null);
     setFormVisible(false);
   };
 
-  const handleEdit = (tracker, index) => {
+  const handleEdit = (tracker) => {
     setName(tracker.name);
     setUnit(tracker.unit || '');
     setGoal(tracker.goal || '');
-    setEditingIndex(index);
+    setEditingId(tracker.id);
     setFormVisible(true);
   };
 
@@ -87,28 +105,29 @@ useFocusEffect(
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Your Trackers</Text>
 
-      {trackers.map((tracker, idx) => (
+      {trackers.map((tracker) => (
         <TouchableOpacity
-          key={idx}
+          key={tracker.id}
           style={styles.trackerItem}
-        onPress={() =>
-  navigation.navigate('CustomTracker', {
-    trackerKey: tracker.name.toLowerCase().replace(/\s+/g, '_'),
-    title: tracker.name,
-    goal: tracker.goal,
-    unit: tracker.unit,
-  })
-}
-
+          onPress={() =>
+            navigation.navigate('CustomTracker', {
+              trackerKey: tracker.name.toLowerCase().replace(/\s+/g, '_'),
+              title: tracker.name,
+              goal: tracker.goal,
+              unit: tracker.unit,
+            })
+          }
         >
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <View style={{ flex: 1 }}>
               <Text style={styles.trackerName}>{tracker.name}</Text>
               {tracker.goal && (
-                <Text style={styles.goalLine}>Goal: {tracker.goal} {tracker.unit}</Text>
+                <Text style={styles.goalLine}>
+                  Goal: {tracker.goal} {tracker.unit}
+                </Text>
               )}
             </View>
-            <TouchableOpacity onPress={() => handleEdit(tracker, idx)}>
+            <TouchableOpacity onPress={() => handleEdit(tracker)}>
               <Text style={styles.editText}>Edit</Text>
             </TouchableOpacity>
           </View>
@@ -123,7 +142,9 @@ useFocusEffect(
 
       {formVisible && (
         <View style={styles.formContainer}>
-          <Text style={styles.formHeader}>{editingIndex !== null ? 'Edit Tracker' : 'Add New Tracker'}</Text>
+          <Text style={styles.formHeader}>
+            {editingId ? 'Edit Tracker' : 'Add New Tracker'}
+          </Text>
 
           <TextInput
             placeholder="Tracker Name"
@@ -146,7 +167,7 @@ useFocusEffect(
 
           <View style={styles.buttonRow}>
             <TouchableOpacity style={styles.saveBtn} onPress={handleAddOrEdit}>
-              <Text style={styles.btnText}>{editingIndex !== null ? 'Update' : 'Save'}</Text>
+              <Text style={styles.btnText}>{editingId ? 'Update' : 'Save'}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelBtn} onPress={resetForm}>
               <Text style={styles.btnText}>Cancel</Text>
@@ -160,7 +181,7 @@ useFocusEffect(
 
 const styles = StyleSheet.create({
   container: { padding: 20 },
-  header: {color: '#023b96ff', fontSize: 22, fontWeight: 'bold', marginBottom: 20 },
+  header: { color: '#023b96ff', fontSize: 22, fontWeight: 'bold', marginBottom: 20 },
   trackerItem: {
     backgroundColor: '#3b82f6',
     padding: 15,
@@ -209,5 +230,5 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignItems: 'center',
   },
-  btnText: { color:'#3b82f6', fontWeight: 'bold' },
+  btnText: { color: '#3b82f6', fontWeight: 'bold' },
 });
