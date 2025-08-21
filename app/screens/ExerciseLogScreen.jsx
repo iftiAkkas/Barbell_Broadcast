@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   editText:{
-    color: '#08a863ff',
+    color: '#3b82f6',
     fontWeight: 'bold',
     marginTop: 6,
   },
@@ -511,7 +511,7 @@ const styles = StyleSheet.create({
   previousLogBlock: {
     marginTop: 10,
     padding: 10,
-    backgroundColor: '#3b83f627',
+    backgroundColor: '#cfdef563',
     borderRadius: 6,
   },
   previousLogDate: {

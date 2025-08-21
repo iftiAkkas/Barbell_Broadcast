@@ -170,7 +170,10 @@ const segments = Math.max(1, Math.round((newMax - newMin) / step));
 
 
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+    <ScrollView  style={{ flex: 1 }}
+  contentContainerStyle={styles.container}
+  keyboardShouldPersistTaps="handled"
+  contentInsetAdjustmentBehavior="always">
       <Text style={styles.title}>{title}</Text>
 
       <TouchableOpacity onPress={() => setShowPicker(true)}>
@@ -314,9 +317,10 @@ const segments = Math.max(1, Math.round((newMax - newMin) / step));
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, backgroundColor: '#f8fafc' },
-  title: { fontSize: 22, fontWeight: '800', marginBottom: 6, color: '#0f172a' },
-  date: { fontSize: 16, marginBottom: 14, color: '#1d4ed8', fontWeight: '600' },
+
+  container: { padding: 16, paddingBottom: 30, backgroundColor: '#f8fafc' },
+  title: { fontSize: 22, fontWeight: '800', marginBottom: 6, color: '#002b70ff' },
+  date: { fontSize: 16, marginBottom: 14, color: '#3b82f6', fontWeight: '600' },
   input: {
     borderWidth: 1,
     borderColor: '#e5e7eb',
@@ -326,12 +330,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   saveBtn: {
-    backgroundColor: '#22c55e',
+    backgroundColor: '#3b82f6',
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: 'center',
     marginBottom: 18,
-    shadowColor: '#22c55e',
+    shadowColor: '#ffffffff',
     shadowOpacity: 0.25,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 3 },
@@ -350,6 +354,7 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 6 },
     elevation: 3,
+    marginBottom: 20,
   },
   chart: {
     borderRadius: 16,
@@ -357,7 +362,7 @@ const styles = StyleSheet.create({
   },
   tooltip: {
     position: 'absolute',
-    backgroundColor: '#0f172a',
+    backgroundColor: '#768fcbff',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -367,7 +372,7 @@ const styles = StyleSheet.create({
   logItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#eef2ff',
+    backgroundColor: '#3b83f6ff',
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 12,
@@ -375,14 +380,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e5e7eb',
   },
-  logText: { color: '#0f172a', fontSize: 14 },
+  logText: { color: '#ffffffff', fontSize: 14 },
   logDate: { fontWeight: '700' },
-  deleteText: { color: '#dc2626', fontWeight: '700' },
+  deleteText: { color: '#ffffffff', fontWeight: '700' },
 
   deleteTrackerBtn: {
     marginTop: 28,
     padding: 14,
-    backgroundColor: '#dc2626',
+    backgroundColor: '#ca2b2bff',
     borderRadius: 12,
     alignItems: 'center',
   },

@@ -157,7 +157,13 @@ export default function ExerciseGraphScreen({ route }) {
   }, [selectedIndex, dataPoints]);
 
   return (
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+<ScrollView
+style={{ flex: 1, backgroundColor: '#f8fafc' }} 
+  contentContainerStyle={styles.container}
+  keyboardShouldPersistTaps="handled"
+  contentInsetAdjustmentBehavior="always"
+>
+
       <Text style={styles.title}>Progress for: {exerciseName}</Text>
 
       {dataPoints.length > 0 ? (
@@ -172,8 +178,8 @@ export default function ExerciseGraphScreen({ route }) {
                 withDots
                 withInnerLines
                 withOuterLines={false}
-                withVerticalLabels={true}    // show X-axis dates
-                withHorizontalLabels={true}  // hide Y-axis numbers
+                withVerticalLabels={true}    
+                withHorizontalLabels={true}  
                 bezier={false}
                 fromZero
                 segments={4}
@@ -199,7 +205,7 @@ export default function ExerciseGraphScreen({ route }) {
                   key={`peak-${index}`}
                   style={{
                     position: 'absolute',
-                    top: y - 6,     // adjust center
+                    top: y - 6,     // adjust 
                     left: x - 6,
                     width: 12,
                     height: 12,
@@ -233,7 +239,7 @@ export default function ExerciseGraphScreen({ route }) {
                 Date: <Text style={styles.detailStrong}>{selectedPoint.date}</Text>
               </Text>
               <Text style={styles.detailLine}>
-                Score (best set): <Text style={styles.detailStrong}>{selectedPoint.score}</Text>
+                Score: <Text>{selectedPoint.score}</Text>
               </Text>
 
               <Text style={[styles.detailLine, { marginTop: 8, fontWeight: '800' }]}>
@@ -259,6 +265,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     backgroundColor: '#f8fafc',
+    flexGrow: 1,
+
   },
   title: {
     fontSize: 20,
@@ -292,9 +300,10 @@ const styles = StyleSheet.create({
   tooltipText: { color: '#fff', fontSize: 12, fontWeight: '700' },
 
   detailCard: {
-    marginTop: 12,
+    marginBottom: 180,
+    marginTop: 20,
     width: screenWidth - 32,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#3b82f6',
     borderRadius: 14,
     paddingVertical: 12,
     paddingHorizontal: 14,
@@ -304,31 +313,31 @@ const styles = StyleSheet.create({
   detailTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#ffffffff',
     marginBottom: 6,
   },
   detailLine: {
     fontSize: 14,
-    color: '#0f172a',
+    color: '#fbfbfbff',
     marginBottom: 2,
   },
   detailStrong: {
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#ffffffff',
   },
   setLine: {
     fontSize: 14,
-    color: '#0f172a',
+    color: '#ffffffff',
     marginBottom: 2,
   },
   setScore: {
-    color: '#64748b',
+    color: '#ffffffff',
     fontWeight: '700',
   },
 
   noData: {
     marginTop: 40,
     fontSize: 16,
-    color: '#888',
+    color: '#ffffffff',
   },
 });

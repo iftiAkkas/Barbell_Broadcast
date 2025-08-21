@@ -236,23 +236,31 @@ export default function RoutineScreen() {
         {routine && !creating && (
           <>
             <Text style={styles.title}>{routine.title}</Text>
-            {routine?.selectedDays?.map((day, i) => (
-              <View key={i} style={styles.dayBlock}>
-                <Text style={styles.subtitle}>
-                  {day} - {routine.dayTitles?.[day] || ''}
-                </Text>
-                {(routine.exercises?.[day] || []).map((ex, j) => {
-                  const setVal = routine.sets?.[day]?.[j] || '?';
-                  const repVal = routine.reps?.[day]?.[j] || '?';
+        {routine?.selectedDays?.map((day, i) => (
+  <View
+    key={i}
+    style={creating ? styles.dayBlockWhite : styles.dayBlockSaved}
+  >
+    <Text style={creating ? styles.subtitle : styles.subtitleSaved}>
+      {day} - {routine.dayTitles?.[day] || ''}
+    </Text>
 
-                  return (
-                    <Text key={j} style={styles.exerciseLine}>
-                      • {ex} ({setVal} sets × {repVal} reps)
-                    </Text>
-                  );
-                })}
-              </View>
-            ))}
+    {(routine.exercises?.[day] || []).map((ex, j) => {
+      const setVal = routine.sets?.[day]?.[j] || '?';
+      const repVal = routine.reps?.[day]?.[j] || '?';
+      return (
+        <Text
+          key={j}
+          style={creating ? styles.exerciseLine : styles.exerciseLineSaved}
+        >
+          • {ex} ({setVal} sets × {repVal} reps)
+        </Text>
+      );
+    })}
+  </View>
+))}
+
+
 
             <TouchableOpacity
               style={styles.editBtn}
@@ -286,6 +294,7 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
     backgroundColor: 'white',
+    flexGrow: 1,
   },
   input: {
     borderWidth: 1,
@@ -300,15 +309,35 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
     marginBottom: 14,
-    color: '#1e3a8a',
+    color:'#023485ff',
   },
   subtitle: {
     fontSize: 16,
     fontWeight: '600',
     marginTop: 10,
-    color: '#2563eb',
+    color: '#2d79f4ff',
     marginBottom: 10,
   },
+    subtitleSaved: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 10,
+    color: '#ffffffff',
+    marginBottom: 6,
+  },
+
+exerciseLine: {
+  marginTop: 6,
+  fontSize: 15,
+  color: '#1e293b',
+},
+exerciseLineSaved: {
+  marginTop: 8,
+  fontSize: 15,
+  color: '#ffffff',   
+},
+
+  
   separator: {
     height: 1,
     backgroundColor: '#cbd5e1',
@@ -323,7 +352,18 @@ const styles = StyleSheet.create({
   dayBlock: {
     marginVertical: 12,
     padding: 14,
-    backgroundColor: '#e0f2fe',
+    backgroundColor: '#ffffffff',
+    borderRadius: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+    dayBlockSaved: {
+    marginVertical: 12,
+    padding: 14,
+    backgroundColor: '#3b82f6',
     borderRadius: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -344,7 +384,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f3f4f6',
   },
   selected: {
-    backgroundColor: '#c1e4fcff',
+    backgroundColor: '#3b83f6a5',
   },
   addMore: {
     color: '#2563eb',
@@ -365,7 +405,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   saveBtn: {
-    backgroundColor: '#10b981',
+    backgroundColor: '#3b82f6',
     padding: 14,
     borderRadius: 12,
     alignItems: 'center',
