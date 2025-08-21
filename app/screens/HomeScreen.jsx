@@ -84,6 +84,7 @@ const styles = StyleSheet.create({
   welcomeContainer: {
     flexDirection: 'row',
     marginBottom: 10,
+    marginTop: 50,
     //alignItems: 'center',
   },
   welcomeBlue: {
@@ -114,7 +115,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 17,
     color: '#6b7280',
-    marginBottom: 80,
+    marginBottom: 60,
     textAlign: 'center',
   },
   gridContainer: {
@@ -143,8 +144,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   icon: {
-    width: BUTTON_SIZE * 0.4,
-    height: BUTTON_SIZE * 0.4,
+    width: BUTTON_SIZE * 0.55,
+    height: BUTTON_SIZE * 0.55,
     marginBottom: 12,
   },
   buttonLabel: {
