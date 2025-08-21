@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,9 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
+
 export default function ExerciseLogScreen({ navigation }) {
+  const scrollRef = useRef(null);
   const [routine, setRoutine] = useState(null);
   const [selectedDay, setSelectedDay] = useState(null);
   const [logDate, setLogDate] = useState(new Date().toISOString().split('T')[0]);
@@ -31,12 +33,19 @@ export default function ExerciseLogScreen({ navigation }) {
     loadRoutine();
   }, []);
 
-  useEffect(() => {
-    if (routine && selectedDay && logDate) {
-      loadLog();
-      loadLogsForDay();
-    }
-  }, [routine, selectedDay, logDate]);
+useEffect(() => {
+  if (routine && selectedDay) {
+    loadLog();
+  }
+}, [routine, selectedDay]);
+
+
+useEffect(() => {
+  if (routine && selectedDay && logDate) {
+    loadLogsForDay();
+  }
+}, [routine, selectedDay, logDate]);
+
 
 const loadLog = async () => {
   const base = {};
@@ -66,21 +75,60 @@ const loadLog = async () => {
     setLog({ ...log, [exercise]: [...sets, { reps: '', weight: '' }] });
   };
 
-  const saveLog = async () => {
-    const stored = await AsyncStorage.getItem('logs');
-    const all = stored ? JSON.parse(stored) : {};
 
-    const todayLog = { log, additionalExercises };
-    all[logDate] = {
-      ...(all[logDate] || {}),
-      [selectedDay]: todayLog,
-    };
 
-    await AsyncStorage.setItem('logs', JSON.stringify(all));
-    setIsEditing(false);
-    Alert.alert('Saved', 'Workout saved!');
-    loadLogsForDay();
+const saveLog = async () => {
+  const stored = await AsyncStorage.getItem('logs');
+  const all = stored ? JSON.parse(stored) : {};
+
+  const cleanedLog = {};
+  Object.entries(log).forEach(([exercise, sets]) => {
+    const validSets = (sets || []).filter((s) => {
+      const reps = String(s?.reps ?? '').trim();
+      const weight = String(s?.weight ?? '').trim();
+      return reps !== '' || weight !== '';
+    });
+    if (validSets.length > 0) cleanedLog[exercise] = validSets;
+  });
+
+  const cleanedAdditional = (additionalExercises || [])
+    .map((ae) => ({
+      ...ae,
+      name: String(ae?.name ?? ''),
+      sets: (ae?.sets ?? []).filter((s) => {
+        const reps = String(s?.reps ?? '').trim();
+        const weight = String(s?.weight ?? '').trim();
+        return reps !== '' || weight !== '';
+      }),
+    }))
+    .filter((ae) => ae.name.trim() !== '' && ae.sets.length > 0);
+
+  const todayLog = { log: cleanedLog, additionalExercises: cleanedAdditional };
+
+  all[logDate] = {
+    ...(all[logDate] || {}),
+    [selectedDay]: todayLog,
   };
+
+  await AsyncStorage.setItem('logs', JSON.stringify(all));
+  Alert.alert('Saved', 'Workout saved!');
+
+  // Refresh the list
+  await loadLogsForDay();
+
+ 
+  setIsEditing(true);     // go back to edit mode
+  await loadLog();        
+
+  requestAnimationFrame(() => {
+    scrollRef?.current?.scrollTo({ y: 0, animated: true });
+  });
+};
+
+
+
+
+
 
   const addAdditionalExercise = () => {
     setAdditionalExercises([...additionalExercises, { name: '', sets: [{ reps: '', weight: '' }] }]);
@@ -92,18 +140,25 @@ const loadLog = async () => {
     setAdditionalExercises(temp);
   };
 
-  const editLogEntry = (date) => {
-    AsyncStorage.getItem('logs').then((stored) => {
-      const all = stored ? JSON.parse(stored) : {};
-      const entry = all[date]?.[selectedDay];
-      if (entry) {
-        setLogDate(date);
-        setLog(entry.log || {});
-        setAdditionalExercises(entry.additionalExercises || []);
-        setIsEditing(true);
-      }
-    });
-  };
+const editLogEntry = (date) => {
+  AsyncStorage.getItem('logs').then((stored) => {
+    const all = stored ? JSON.parse(stored) : {};
+    const entry = all[date]?.[selectedDay];
+    if (entry) {
+      setLogDate(date);
+      setLog(entry.log || {});
+      setAdditionalExercises(entry.additionalExercises || []);
+      setIsEditing(true);
+
+      // give React a tick to render, then scroll
+      requestAnimationFrame(() => {
+        scrollRef.current?.scrollTo({ y: 0, animated: true });
+      });
+      // or: setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 0);
+    }
+  });
+};
+
 
   const deleteLogEntry = async (date) => {
     Alert.alert('Delete Log', `Delete log for ${date}?`, [
@@ -139,6 +194,8 @@ const loadLog = async () => {
   style={{ flex: 1 }}
 >
   <ScrollView
+    ref={scrollRef}
+    style={{flex:1}}
     contentContainerStyle={styles.container}
     keyboardShouldPersistTaps="handled"
   >
@@ -317,20 +374,23 @@ const loadLog = async () => {
                           </View>
                         ))}
 
-                        {dayLog.additionalExercises?.map((ae, i) => (
-                          <View key={`a-${i}`}>
-                            <Text style={styles.exerciseTitle}>{ae.name}</Text>
-                            {ae.sets.map((set, idx) => (
-                              <Text key={idx} style={styles.readOnlyText}>
-                                Set {idx + 1}: {set.reps} reps × {set.weight} kg
-                              </Text>
-                            ))}
-                          </View>
-                        ))}
+                      {dayLog.additionalExercises?.map((ae, i) => (
+  <View key={`a-${i}`}>
+    <Text style={styles.exerciseTitle}>
+      {ae?.name ? `${ae.name} (Additional)` : '(Additional)'}
+    </Text>
+    {ae.sets?.map((set, idx) => (
+      <Text key={idx} style={styles.readOnlyText}>
+        Set {idx + 1}: {set.reps} reps × {set.weight} kg
+      </Text>
+    ))}
+  </View>
+))}
+
 
                         <View style={styles.previousLogButtons}>
                           <TouchableOpacity onPress={() => editLogEntry(date)}>
-                            <Text style={[styles.addText, { marginRight: 10 }]}>Edit</Text>
+                            <Text style={[styles.editText, { marginRight: 10 }]}>Edit</Text>
                           </TouchableOpacity>
                           <TouchableOpacity onPress={() => deleteLogEntry(date)}>
                             <Text style={[styles.addText, { color: 'red' }]}>Delete</Text>
@@ -348,12 +408,13 @@ const loadLog = async () => {
     </KeyboardAvoidingView>
   );
 }
-
+// Menu blue '#3b82f6'
 const styles = StyleSheet.create({
   container: {
+    flexGrow: 1,
     padding: 16,
-    paddingBottom: 100,
-    backgroundColor: '#f0f8ff',
+    paddingBottom: 16,
+    backgroundColor: 'white',
   },
   title: {
     fontSize: 20,
@@ -376,17 +437,17 @@ const styles = StyleSheet.create({
     padding: 10,
     margin: 5,
     borderRadius: 6,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: '#3b82f6',
   },
   daySelected: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#798597ff',
   },
   dayButtonText: {
-    color: '#000',
+    color: 'white',
     fontWeight: '600',
   },
   dateButton: {
-    backgroundColor: '#d0e7ff',
+    backgroundColor: '#3b82f6',
     padding: 10,
     borderRadius: 6,
     alignItems: 'center',
@@ -394,7 +455,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontWeight: '600',
-    color: '#003366',
+    color: 'white',
   },
   exerciseBlock: {
     marginBottom: 16,
@@ -419,12 +480,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   addText: {
-    color: '#007bff',
+    color: '#3b82f6',
     fontWeight: 'bold',
     marginTop: 6,
   },
   saveBtn: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#3b82f6',
     padding: 12,
     borderRadius: 6,
     alignItems: 'center',
@@ -434,30 +495,28 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
-  editBtn: {
-    backgroundColor: '#ffc107',
-    padding: 12,
-    borderRadius: 6,
-    alignItems: 'center',
-    marginTop: 20,
+  editText:{
+    color: '#08a863ff',
+    fontWeight: 'bold',
+    marginTop: 6,
   },
   readOnlyText: {
     color: '#000',
   },
   separator: {
     height: 1,
-    backgroundColor: '#ccc',
+    backgroundColor: '#b6bbc4ff',
     marginTop: 10,
   },
   previousLogBlock: {
     marginTop: 10,
     padding: 10,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#3b83f627',
     borderRadius: 6,
   },
   previousLogDate: {
     fontWeight: 'bold',
-    color: '#003366',
+    color:'#003366',
     marginBottom: 6,
   },
   previousLogButtons: {
