@@ -1,5 +1,4 @@
-// ✅ Final RoutineScreen.js with keyboard fix, separator between exercises, and dayData check
-
+// ✅ RoutineScreen.js with Firestore + AsyncStorage
 import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -12,8 +11,11 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { getAuth } from 'firebase/auth';
+import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
+import app from '../../firebase/config'; // ✅ your firebase setup
 
-const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const daysOfWeek = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
 export default function RoutineScreen() {
   const [creating, setCreating] = useState(false);
@@ -21,6 +23,9 @@ export default function RoutineScreen() {
   const [selectedDays, setSelectedDays] = useState([]);
   const [routine, setRoutine] = useState(null);
   const [dayData, setDayData] = useState({});
+
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
   useEffect(() => {
     const loadRoutine = async () => {
@@ -30,6 +35,18 @@ export default function RoutineScreen() {
           const parsed = JSON.parse(saved);
           setRoutine(parsed);
           setRoutineTitle(parsed.title);
+        }
+
+        // 🔥 Load from Firestore
+        const user = auth.currentUser;
+        if (user) {
+          const ref = doc(db, 'users', user.uid, 'data', 'routine');
+          const snap = await getDoc(ref);
+          if (snap.exists()) {
+            const firestoreRoutine = snap.data();
+            setRoutine(firestoreRoutine);
+            setRoutineTitle(firestoreRoutine.title);
+          }
         }
       } catch (e) {
         console.error('❌ Failed to load routine:', e);
@@ -81,7 +98,16 @@ export default function RoutineScreen() {
     });
 
     try {
+      // ✅ Save locally
       await AsyncStorage.setItem('routine', JSON.stringify(finalRoutine));
+
+      // ✅ Save to Firestore
+      const user = auth.currentUser;
+      if (user) {
+        const ref = doc(db, 'users', user.uid, 'data', 'routine');
+        await setDoc(ref, finalRoutine);
+      }
+
       setRoutine(finalRoutine);
       setCreating(false);
     } catch (e) {
@@ -99,12 +125,14 @@ export default function RoutineScreen() {
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
+        {/* If no routine */}
         {!creating && !routine && (
           <TouchableOpacity style={styles.createBtn} onPress={() => setCreating(true)}>
             <Text style={styles.btnText}>Create A Routine</Text>
           </TouchableOpacity>
         )}
 
+        {/* Create Routine */}
         {creating && (
           <>
             <TextInput
@@ -130,22 +158,21 @@ export default function RoutineScreen() {
             {selectedDays.map(day => {
               if (!dayData[day]) return null;
               return (
-              <View key={day} style={styles.dayBlock}>
-              <Text style={styles.subtitle}>{day}</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Day Title (e.g. Push Day)"
-                value={dayData[day].title}
-                onChangeText={text =>
-                  setDayData({ ...dayData, [day]: { ...dayData[day], title: text } })
-                }
-              />
-              <View style={styles.separator} />
+                <View key={day} style={styles.dayBlock}>
+                  <Text style={styles.subtitle}>{day}</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Day Title (e.g. Push Day)"
+                    value={dayData[day].title}
+                    onChangeText={text =>
+                      setDayData({ ...dayData, [day]: { ...dayData[day], title: text } })
+                    }
+                  />
+                  <View style={styles.separator} />
 
                   {dayData[day].exercises.map((_, idx) => (
                     <View key={idx}>
                       {idx > 0 && <View style={styles.exerciseSeparator} />}
-
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <View style={{ flex: 1 }}>
                           <TextInput
@@ -179,7 +206,6 @@ export default function RoutineScreen() {
                             }}
                           />
                         </View>
-
                         {dayData[day].exercises.length > 1 && (
                           <TouchableOpacity
                             onPress={() => {
@@ -191,12 +217,7 @@ export default function RoutineScreen() {
                               newReps.splice(idx, 1);
                               setDayData({
                                 ...dayData,
-                                [day]: {
-                                  ...dayData[day],
-                                  exercises: newEx,
-                                  sets: newSets,
-                                  reps: newReps,
-                                },
+                                [day]: { ...dayData[day], exercises: newEx, sets: newSets, reps: newReps },
                               });
                             }}
                             style={styles.deleteBtnSmall}
@@ -233,34 +254,26 @@ export default function RoutineScreen() {
           </>
         )}
 
+        {/* Show Routine */}
         {routine && !creating && (
           <>
             <Text style={styles.title}>{routine.title}</Text>
-        {routine?.selectedDays?.map((day, i) => (
-  <View
-    key={i}
-    style={creating ? styles.dayBlockWhite : styles.dayBlockSaved}
-  >
-    <Text style={creating ? styles.subtitle : styles.subtitleSaved}>
-      {day} - {routine.dayTitles?.[day] || ''}
-    </Text>
-
-    {(routine.exercises?.[day] || []).map((ex, j) => {
-      const setVal = routine.sets?.[day]?.[j] || '?';
-      const repVal = routine.reps?.[day]?.[j] || '?';
-      return (
-        <Text
-          key={j}
-          style={creating ? styles.exerciseLine : styles.exerciseLineSaved}
-        >
-          • {ex} ({setVal} sets × {repVal} reps)
-        </Text>
-      );
-    })}
-  </View>
-))}
-
-
+            {routine?.selectedDays?.map((day, i) => (
+              <View key={i} style={styles.dayBlockSaved}>
+                <Text style={styles.subtitleSaved}>
+                  {day} - {routine.dayTitles?.[day] || ''}
+                </Text>
+                {(routine.exercises?.[day] || []).map((ex, j) => {
+                  const setVal = routine.sets?.[day]?.[j] || '?';
+                  const repVal = routine.reps?.[day]?.[j] || '?';
+                  return (
+                    <Text key={j} style={styles.exerciseLineSaved}>
+                      • {ex} ({setVal} sets × {repVal} reps)
+                    </Text>
+                  );
+                })}
+              </View>
+            ))}
 
             <TouchableOpacity
               style={styles.editBtn}
@@ -268,7 +281,7 @@ export default function RoutineScreen() {
                 setCreating(true);
                 setRoutineTitle(routine.title);
                 setSelectedDays(routine.selectedDays);
-              const newDayData = {};
+                const newDayData = {};
                 routine.selectedDays.forEach(day => {
                   newDayData[day] = {
                     title: routine.dayTitles[day],
@@ -277,7 +290,6 @@ export default function RoutineScreen() {
                     reps: (routine.reps?.[day] || []).map(String),
                   };
                 });
-
                 setDayData(newDayData);
               }}
             >
@@ -291,150 +303,25 @@ export default function RoutineScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    backgroundColor: 'white',
-    flexGrow: 1,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    padding: 10,
-    borderRadius: 10,
-    marginVertical: 8,
-    backgroundColor: '#f9fafb',
-    fontSize: 15,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 14,
-    color:'#023485ff',
-  },
-  subtitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 10,
-    color: '#2d79f4ff',
-    marginBottom: 10,
-  },
-    subtitleSaved: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 10,
-    color: '#ffffffff',
-    marginBottom: 6,
-  },
-
-exerciseLine: {
-  marginTop: 6,
-  fontSize: 15,
-  color: '#1e293b',
-},
-exerciseLineSaved: {
-  marginTop: 8,
-  fontSize: 15,
-  color: '#ffffff',   
-},
-
-  
-  separator: {
-    height: 1,
-    backgroundColor: '#cbd5e1',
-    marginVertical: 10,
-  },
-  exerciseSeparator: {
-    height: 1,
-    backgroundColor: '#d1d5db',
-    marginVertical: 10,
-    marginBottom: 30,
-  },
-  dayBlock: {
-    marginVertical: 12,
-    padding: 14,
-    backgroundColor: '#ffffffff',
-    borderRadius: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-    dayBlockSaved: {
-    marginVertical: 12,
-    padding: 14,
-    backgroundColor: '#3b82f6',
-    borderRadius: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  daysContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 14,
-    gap: 8,
-  },
-  dayBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    backgroundColor: '#f3f4f6',
-  },
-  selected: {
-    backgroundColor: '#3b83f6a5',
-  },
-  addMore: {
-    color: '#2563eb',
-    fontWeight: '600',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  createBtn: {
-    backgroundColor: '#3b82f6',
-    padding: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginVertical: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 5,
-    elevation: 4,
-  },
-  saveBtn: {
-    backgroundColor: '#3b82f6',
-    padding: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 30,
-  },
-  editBtn: {
-    backgroundColor: '#3b82f6',
-    padding: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 30,
-  },
-  btnText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  exerciseLine: {
-    marginTop: 6,
-    fontSize: 15,
-    color: '#1e293b',
-  },
-  deleteBtnSmall: {
-    marginLeft: 10,
-    padding: 8,
-    borderRadius: 8,
-  },
-  deleteText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
+  container:{padding:20,backgroundColor:'white',flexGrow:1},
+  input:{borderWidth:1,borderColor:'#d1d5db',padding:10,borderRadius:10,marginVertical:8,backgroundColor:'#f9fafb',fontSize:15},
+  title:{fontSize:22,fontWeight:'700',marginBottom:14,color:'#023485ff'},
+  subtitle:{fontSize:16,fontWeight:'600',marginTop:10,color:'#2d79f4ff',marginBottom:10},
+  subtitleSaved:{fontSize:18,fontWeight:'600',marginTop:10,color:'#fff',marginBottom:6},
+  exerciseLine:{marginTop:6,fontSize:15,color:'#1e293b'},
+  exerciseLineSaved:{marginTop:8,fontSize:15,color:'#fff'},
+  separator:{height:1,backgroundColor:'#cbd5e1',marginVertical:10},
+  exerciseSeparator:{height:1,backgroundColor:'#d1d5db',marginVertical:10,marginBottom:30},
+  dayBlock:{marginVertical:12,padding:14,backgroundColor:'#fff',borderRadius:14,shadowColor:'#000',shadowOffset:{width:0,height:2},shadowOpacity:0.1,shadowRadius:4,elevation:3},
+  dayBlockSaved:{marginVertical:12,padding:14,backgroundColor:'#3b82f6',borderRadius:14,shadowColor:'#000',shadowOffset:{width:0,height:2},shadowOpacity:0.1,shadowRadius:4,elevation:3},
+  daysContainer:{flexDirection:'row',flexWrap:'wrap',marginBottom:14,gap:8},
+  dayBtn:{paddingVertical:8,paddingHorizontal:14,borderRadius:20,backgroundColor:'#f3f4f6'},
+  selected:{backgroundColor:'#3b83f6a5'},
+  addMore:{color:'#2563eb',fontWeight:'600',marginTop:8,textAlign:'center'},
+  createBtn:{backgroundColor:'#3b82f6',padding:14,borderRadius:12,alignItems:'center',marginVertical:20,shadowColor:'#000',shadowOffset:{width:0,height:2},shadowOpacity:0.15,shadowRadius:5,elevation:4},
+  saveBtn:{backgroundColor:'#3b82f6',padding:14,borderRadius:12,alignItems:'center',marginTop:30},
+  editBtn:{backgroundColor:'#3b82f6',padding:14,borderRadius:12,alignItems:'center',marginTop:30},
+  btnText:{color:'white',fontWeight:'bold',fontSize:16},
+  deleteBtnSmall:{marginLeft:10,padding:8,borderRadius:8},
+  deleteText:{color:'#fff',fontWeight:'bold'},
 });
