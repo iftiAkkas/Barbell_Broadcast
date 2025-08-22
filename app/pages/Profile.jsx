@@ -13,6 +13,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ScrollView,
 } from 'react-native';
 import { auth, db } from '../../firebase/config';
 import { signOut } from 'firebase/auth';
@@ -45,8 +46,12 @@ const uploadImageToCloudinary = async (uri) => {
 export default function Profile() {
   const [userData, setUserData] = useState(null);
   const [profilePic, setProfilePic] = useState(null);
+
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [newName, setNewName] = useState('');
+
+  const [showBioModal, setShowBioModal] = useState(false);
+  const [newBio, setNewBio] = useState('');
 
   useEffect(() => {
     fetchUserData();
@@ -160,15 +165,35 @@ export default function Profile() {
     }
   };
 
+  const handleChangeBio = () => {
+    setNewBio(userData?.bio || '');
+    setShowBioModal(true);
+  };
+
+  const saveNewBio = async () => {
+    try {
+      const docRef = doc(db, 'users', auth.currentUser.uid);
+      await setDoc(
+        docRef,
+        {
+          ...userData,
+          bio: newBio.trim(),
+        },
+        { merge: true }
+      );
+      setShowBioModal(false);
+      fetchUserData();
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update bio');
+    }
+  };
+
   const handleLogout = async () => {
     Alert.alert(
       'Confirm Logout',
       'Are you sure you want to logout?',
       [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Logout',
           style: 'destructive',
@@ -200,7 +225,7 @@ export default function Profile() {
     );
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <TouchableOpacity onPress={chooseImageSource}>
         <Image
           source={profilePic ? { uri: profilePic } : getDefaultIcon()}
@@ -212,6 +237,17 @@ export default function Profile() {
         {userData.firstName} {userData.lastName}
       </Text>
       <Text style={styles.email}>{userData.email}</Text>
+
+      {userData.bio ? (
+        <Text style={styles.bio}>{userData.bio}</Text>
+      ) : (
+        <Text style={[styles.bio, { fontStyle: 'italic', color: 'gray' }]}>No bio added yet</Text>
+      )}
+
+      {/* Small Edit Bio Button placed right below bio text */}
+      <TouchableOpacity style={styles.editBioButton} onPress={handleChangeBio}>
+        <Text style={styles.editBioText}>Edit Bio</Text>
+      </TouchableOpacity>
 
       <View style={styles.gridRow}>
         <TouchableOpacity style={styles.gridButton} onPress={chooseImageSource}>
@@ -233,13 +269,8 @@ export default function Profile() {
         <Text style={styles.buttonText}>Logout</Text>
       </TouchableOpacity>
 
-      {/* Username change modal */}
-      <Modal
-        visible={showUsernameModal}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setShowUsernameModal(false)}
-      >
+      {/* Username Modal */}
+      <Modal visible={showUsernameModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Change Username</Text>
@@ -264,17 +295,45 @@ export default function Profile() {
           </View>
         </View>
       </Modal>
-    </View>
+
+      {/* Bio Modal */}
+      <Modal visible={showBioModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Edit Bio</Text>
+            <TextInput
+              placeholder="Write something about yourself..."
+              style={[styles.modalInput, { height: 100, textAlignVertical: 'top' }]}
+              value={newBio}
+              onChangeText={setNewBio}
+              multiline
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.button, { backgroundColor: '#6c757d' }]}
+                onPress={() => setShowBioModal(false)}
+              >
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.button} onPress={saveNewBio}>
+                <Text style={styles.buttonText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#fff',
     paddingHorizontal: 20,
+    paddingVertical: 30,
   },
   loadingContainer: {
     flex: 1,
@@ -296,7 +355,33 @@ const styles = StyleSheet.create({
   email: {
     fontSize: 16,
     color: 'gray',
-    marginBottom: 32,
+    marginBottom: 12,
+  },
+    bio: {
+    fontSize: 15,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 6,
+    fontStyle: 'italic',   // italic
+    fontWeight: 'bold',    // bold
+    color: '#333',         // darker for contrast
+    //textShadowColor: 'rgba(0,0,0,0.3)', // shadow
+    //textShadowOffset: { width: 1, height: 1 },
+    //textShadowRadius: 2,
+  },
+
+  editBioButton: {
+    marginTop:10,
+    marginBottom: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    backgroundColor: '#007bff',
+    borderRadius: 8,
+  },
+  editBioText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
   },
   gridRow: {
     flexDirection: 'row',
@@ -312,6 +397,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginHorizontal: 8,
+    marginVertical: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -319,12 +405,12 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   gridIcon: {
-    fontSize: 40,
-    marginBottom: 8,
+    fontSize: 32,
+    marginBottom: 6,
   },
   gridLabel: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     textAlign: 'center',
   },
