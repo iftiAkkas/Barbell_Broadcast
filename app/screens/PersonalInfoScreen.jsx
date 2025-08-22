@@ -134,7 +134,7 @@ return (
     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     style={{ flex: 1 }}
   >
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 100 }} keyboardShouldPersistTaps="handled">
 
       <View style={styles.rowEnd}>
         {!isEditing && (
@@ -329,9 +329,6 @@ return (
   </View>
 </Modal>
 
-
-
-
      </ScrollView>
   </KeyboardAvoidingView>
 );
@@ -442,6 +439,7 @@ deleteText: {
   justifyContent: 'space-between',
   alignItems: 'center',
   marginTop: 6,
+  //marginBottom: 20,
 },
 deleteText: {
   color: 'red',

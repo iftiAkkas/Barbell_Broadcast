@@ -155,8 +155,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   icon: {
-    width: BUTTON_SIZE * 0.55,
-    height: BUTTON_SIZE * 0.55,
+    width: BUTTON_SIZE * 0.35,
+    height: BUTTON_SIZE * 0.35,
     tintColor: '#3b82f6', // icons will be blue inside white circle
   },
   buttonLabel: {
