@@ -253,21 +253,6 @@ export default function Signup() {
 
           <Button title="Sign Up" onPress={handleSignup} />
 
-          <View style={styles.socialRow}>
-            <TouchableOpacity
-              onPress={() => Alert.alert('Google Sign-In not implemented')}
-              style={styles.socialButton}
-            >
-              <FontAwesome name="google" size={32} color="#DB4437" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => Alert.alert('Facebook not implemented yet')}
-              style={styles.socialButton}
-            >
-              <FontAwesome name="facebook" size={32} color="#4267B2" />
-            </TouchableOpacity>
-          </View>
 
           <TouchableOpacity onPress={() => router.push('/login')}>
             <Text style={styles.linkText}>Already have an account? Login</Text>
@@ -287,7 +272,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 20,
-    marginTop:40,
+    marginTop:8,
   },
   heading: {
     fontSize: 32,
