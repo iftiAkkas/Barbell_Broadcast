@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Dimensions } from "react-native";
-import { LineChart } from "react-native-chart-kit";
-import {db} from "../../firebase/config"; // ✅ import firebase
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+//Clicking on other dots should show the sets of those days
 
-const screenWidth = Dimensions.get("window").width;
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LineChart } from 'react-native-chart-kit';
+
+const screenWidth = Dimensions.get('window').width;
 
 // Strength score formula
 function calculateStrengthScore(weight, reps) {
@@ -12,24 +13,24 @@ function calculateStrengthScore(weight, reps) {
 }
 
 export default function ExerciseGraphScreen({ route }) {
-  const { exerciseName, userId } = route.params; // ✅ pass userId
-  const [dataPoints, setDataPoints] = useState([]);
-  const [tooltip, setTooltip] = useState(null);
+  const { exerciseName } = route.params;
+  const [dataPoints, setDataPoints] = useState([]); // [{date, score, sets:[{weight,reps,score}]}]
+  const [tooltip, setTooltip] = useState(null);      // { x, y, text }
   const [selectedIndex, setSelectedIndex] = useState(null);
 
   useEffect(() => {
     const loadLogs = async () => {
-      try {
-        const q = query(
-          collection(db, "logs", userId, exerciseName),
-          orderBy("date", "asc")
-        );
-        const querySnapshot = await getDocs(q);
+      const stored = await AsyncStorage.getItem('logs');
+      const all = stored ? JSON.parse(stored) : {};
 
-        const perDay = {};
-        querySnapshot.forEach((doc) => {
-          const { date, sets } = doc.data();
-          sets.forEach(({ reps, weight }) => {
+      // Build per-day aggregation of ALL sets for this exercise
+      const perDay = {}; // date -> [{weight,reps,score}, ...]
+
+      Object.entries(all).forEach(([date, dayData]) => {
+        Object.values(dayData).forEach((entry) => {
+          // Routine exercises (array of sets)
+          const routineSets = entry.log?.[exerciseName] || [];
+          routineSets.forEach(({ reps, weight }) => {
             const repsNum = parseFloat(reps);
             const weightNum = parseFloat(weight);
             if (!isNaN(repsNum) && !isNaN(weightNum)) {
@@ -41,36 +42,49 @@ export default function ExerciseGraphScreen({ route }) {
               });
             }
           });
+
+          // Additional exercises (could be multiple entries for same name)
+          entry.additionalExercises?.forEach((ae) => {
+            if (ae.name === exerciseName) {
+              ae.sets.forEach(({ reps, weight }) => {
+                const repsNum = parseFloat(reps);
+                const weightNum = parseFloat(weight);
+                if (!isNaN(repsNum) && !isNaN(weightNum)) {
+                  const sc = calculateStrengthScore(weightNum, repsNum);
+                  (perDay[date] ||= []).push({
+                    reps: repsNum,
+                    weight: weightNum,
+                    score: sc,
+                  });
+                }
+              });
+            }
+          });
         });
+      });
 
-        // Convert into array
-        const points = Object.entries(perDay)
-          .map(([date, sets]) => {
-            const maxSet = sets.reduce(
-              (m, s) => (s.score > m.score ? s : m),
-              sets[0]
-            );
-            return {
-              date,
-              score: Math.round(maxSet.score),
-              sets: sets
-                .slice()
-                .sort((a, b) => b.score - a.score)
-                .map((s) => ({ ...s, score: Math.round(s.score) })),
-            };
-          })
-          .sort((a, b) => new Date(a.date) - new Date(b.date));
+      // Turn into sorted array of days; day score = max set score
+      const points = Object.entries(perDay)
+        .map(([date, sets]) => {
+          const maxSet = sets.reduce((m, s) => (s.score > m.score ? s : m), sets[0]);
+          return {
+            date,
+            score: Math.round(maxSet.score),
+            sets: sets
+              .slice()
+              .sort((a, b) => b.score - a.score) // show best-first
+              .map(s => ({ ...s, score: Math.round(s.score) })),
+          };
+        })
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-        setDataPoints(points);
-      } catch (err) {
-        console.error("Error fetching logs:", err);
-      }
+      setDataPoints(points);
     };
 
     loadLogs();
-  }, [exerciseName, userId]);
+  }, [exerciseName]);
 
-  // Default select peak day
+  // Default select the peak day when data changes
   useEffect(() => {
     if (!dataPoints.length) {
       setSelectedIndex(null);
@@ -83,11 +97,10 @@ export default function ExerciseGraphScreen({ route }) {
     setSelectedIndex(maxIdx);
   }, [dataPoints]);
 
-  // Chart Data
   const rawLabels = dataPoints.map((pt) => pt.date.slice(5)); // MM-DD
   const maxLabels = 6;
   const step = Math.max(1, Math.ceil(rawLabels.length / maxLabels));
-  const labels = rawLabels.map((d, i) => (i % step === 0 ? d : ""));
+  const labels = rawLabels.map((d, i) => (i % step === 0 ? d : ''));
 
   const scores = dataPoints.map((pt) => pt.score);
 
@@ -103,29 +116,29 @@ export default function ExerciseGraphScreen({ route }) {
   };
 
   const chartConfig = {
-    backgroundGradientFrom: "#ffffff",
-    backgroundGradientTo: "#ffffff",
+    backgroundGradientFrom: '#ffffff',
+    backgroundGradientTo: '#ffffff',
     decimalPlaces: 0,
     color: (opacity = 1) => `rgba(0, 123, 255, ${opacity})`,
     labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
     strokeWidth: 3,
     propsForDots: {
-      r: "3",
-      strokeWidth: "2",
-      stroke: "rgba(16, 80, 200, 1)",
+      r: '3',
+      strokeWidth: '2',
+      stroke:  'rgba(16, 80, 200, 1)',
     },
     propsForBackgroundLines: {
-      strokeDasharray: "3 6",
-      stroke: "rgba(0,0,0,0.08)",
+      strokeDasharray: '3 6',
+      stroke: 'rgba(0,0,0,0.08)',
       strokeWidth: 1,
     },
     useShadowColorFromDataset: false,
-    fillShadowGradient: "rgba(16, 80, 200, 1)",
+    fillShadowGradient:  'rgba(16, 80, 200, 1)',
     fillShadowGradientOpacity: 0.15,
-    formatYLabel: () => "",
+    formatYLabel: () => '',
   };
 
-  // Peak index
+  // Peak index for highlighting
   const peakIndex = useMemo(() => {
     if (!dataPoints.length) return null;
     let m = 0;
@@ -140,10 +153,17 @@ export default function ExerciseGraphScreen({ route }) {
   const selectedPoint = useMemo(() => {
     if (selectedIndex == null || !dataPoints[selectedIndex]) return null;
     return dataPoints[selectedIndex];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedIndex, dataPoints]);
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: "#f8fafc" }} contentContainerStyle={styles.container}>
+<ScrollView
+style={{ flex: 1, backgroundColor: '#f8fafc' }} 
+  contentContainerStyle={styles.container}
+  keyboardShouldPersistTaps="handled"
+  contentInsetAdjustmentBehavior="always"
+>
+
       <Text style={styles.title}>Progress for: {exerciseName}</Text>
 
       {dataPoints.length > 0 ? (
@@ -158,31 +178,62 @@ export default function ExerciseGraphScreen({ route }) {
                 withDots
                 withInnerLines
                 withOuterLines={false}
-                withVerticalLabels={true}
-                withHorizontalLabels={true}
+                withVerticalLabels={true}    
+                withHorizontalLabels={true}  
+                bezier={false}
                 fromZero
                 segments={4}
                 style={styles.chart}
                 onDataPointClick={({ index, x, y, value }) => {
+                  // reliably switch details to tapped day
                   setSelectedIndex(index);
+
+                  // Optional tooltip
                   const p = dataPoints[index];
                   if (p) {
                     const text = `${p.date}\nScore: ${value}\n${
-                      p.sets[0]?.weight ?? "-"
-                    } kg × ${p.sets[0]?.reps ?? "-"}`;
+                      p.sets[0]?.weight ?? '-'
+                    } kg × ${p.sets[0]?.reps ?? '-'}`;
                     setTooltip({ x, y, text });
                     setTimeout(() => setTooltip(null), 1200);
                   }
                 }}
+                // 1) Peak-day highlight ring
+              renderDotContent={({ x, y, index }) =>
+              peakIndex === index ? (
+                <View
+                  key={`peak-${index}`}
+                  style={{
+                    position: 'absolute',
+                    top: y - 6,     // adjust 
+                    left: x - 6,
+                    width: 12,
+                    height: 12,
+                    borderRadius: 6,
+                    borderWidth: 4, 
+                    borderColor: 'rgba(34,197,94,0.95)',
+                    backgroundColor: '#ffffff',
+                  }}
+                />
+              ) : null
+            }
+
               />
+
+              {/* Tooltip bubble (optional) */}
+              {tooltip && (
+                <View style={[styles.tooltip, { left: tooltip.x - 48, top: tooltip.y - 56 }]}>
+                  <Text style={styles.tooltipText}>{tooltip.text}</Text>
+                </View>
+              )}
             </View>
           </ScrollView>
 
-          {/* Details Panel */}
+          {/* 2) Details panel: shows ALL sets for selected day */}
           {selectedPoint && (
             <View style={styles.detailCard}>
               <Text style={styles.detailTitle}>
-                {selectedIndex === peakIndex ? "Peak Day" : "Selected Day"}
+                {selectedIndex === peakIndex ? 'Peak Day' : 'Selected Day'}
               </Text>
               <Text style={styles.detailLine}>
                 Date: <Text style={styles.detailStrong}>{selectedPoint.date}</Text>
@@ -190,13 +241,13 @@ export default function ExerciseGraphScreen({ route }) {
               <Text style={styles.detailLine}>
                 Score: <Text>{selectedPoint.score}</Text>
               </Text>
-              <Text style={[styles.detailLine, { marginTop: 8, fontWeight: "800" }]}>
+
+              <Text style={[styles.detailLine, { marginTop: 8, fontWeight: '800' }]}>
                 All Sets
               </Text>
               {selectedPoint.sets.map((s, i) => (
                 <Text key={i} style={styles.setLine}>
-                  • {s.weight} kg × {s.reps}{" "}
-                  <Text style={styles.setScore}>({s.score})</Text>
+                  • {s.weight} kg × {s.reps}  <Text style={styles.setScore}>({s.score})</Text>
                 </Text>
               ))}
             </View>
@@ -210,22 +261,85 @@ export default function ExerciseGraphScreen({ route }) {
 }
 
 const styles = StyleSheet.create({
-  container: { alignItems: "center", padding: 16, flexGrow: 1 },
-  title: { fontSize: 20, fontWeight: "800", marginBottom: 16, color: "#003366" },
-  chartCard: { backgroundColor: "#fff", borderRadius: 16, padding: 8, elevation: 3 },
-  chart: { borderRadius: 16, marginVertical: 8 },
+  container: {
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#f8fafc',
+    flexGrow: 1,
+
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '800',
+    marginBottom: 16,
+    color: '#003366',
+  },
+  chartCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    shadowColor: '#0f172a',
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
+  },
+  chart: {
+    borderRadius: 16,
+    marginVertical: 8,
+  },
+  tooltip: {
+    position: 'absolute',
+    backgroundColor: '#0f172a',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 8,
+    maxWidth: 160,
+  },
+  tooltipText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+
   detailCard: {
     marginBottom: 180,
     marginTop: 20,
     width: screenWidth - 32,
-    backgroundColor: "#3b82f6",
+    backgroundColor: '#3b82f6',
     borderRadius: 14,
-    padding: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
-  detailTitle: { fontSize: 14, fontWeight: "800", color: "#fff", marginBottom: 6 },
-  detailLine: { fontSize: 14, color: "#fbfbfb", marginBottom: 2 },
-  detailStrong: { fontWeight: "800", color: "#fff" },
-  setLine: { fontSize: 14, color: "#fff", marginBottom: 2 },
-  setScore: { color: "#fff", fontWeight: "700" },
-  noData: { marginTop: 40, fontSize: 16, color: "#555" },
+  detailTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#ffffffff',
+    marginBottom: 6,
+  },
+  detailLine: {
+    fontSize: 14,
+    color: '#fbfbfbff',
+    marginBottom: 2,
+  },
+  detailStrong: {
+    fontWeight: '800',
+    color: '#ffffffff',
+  },
+  setLine: {
+    fontSize: 14,
+    color: '#ffffffff',
+    marginBottom: 2,
+  },
+  setScore: {
+    color: '#ffffffff',
+    fontWeight: '700',
+  },
+
+  noData: {
+    marginTop: 40,
+    fontSize: 16,
+    color: '#ffffffff',
+  },
 });
+
+
