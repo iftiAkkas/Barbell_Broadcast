@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from "react";
+//btnLabel not working for Click to View All Stats
+
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,316 +11,532 @@ import {
   Alert,
   Modal,
   KeyboardAvoidingView,
-  Platform,
-} from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { db, auth } from "../../firebase/config"; // ✅ auth included
-import { doc, setDoc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
+  Platform
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Picker } from '@react-native-picker/picker';
 
 export default function PersonalInfoScreen() {
-  const [info, setInfo] = useState({
-    name: "",
-    age: "",
-    gender: "male",
-    heightFt: "",
-    heightIn: "",
-    weight: "",
-    prs: [],
-    activityLevel: "Active",
-  });
+const [info, setInfo] = useState({
+  name: '',
+  age: '',
+  gender: 'male',
+  heightFt: '',
+  heightIn: '',
+  weight: '',
+  prs: [],
+  activityLevel: 'Active', // default value
+});
+
 
   const [isEditing, setIsEditing] = useState(true);
+  const [newPRName, setNewPRName] = useState('');
+  const [newPRValue, setNewPRValue] = useState('');
   const [showPRModal, setShowPRModal] = useState(false);
-  const [newPR, setNewPR] = useState({
-    name: "",
-    weight: "",
-    reps: "",
-    isFavorite: false,
-  });
+ const [newPR, setNewPR] = useState({ name: '', weight: '', reps: '', isFavorite: false });
+
   const [prs, setPrs] = useState([]);
-  const [userId, setUserId] = useState(null);
+
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        setUserId(user.uid);
-        loadInfo(user.uid);
-      }
-    });
-    return unsubscribe;
+    loadInfo();
   }, []);
 
-  // 🔥 Load from Firestore first, fallback to AsyncStorage
-  const loadInfo = async (uid) => {
-    try {
-      const userDoc = await getDoc(doc(db, "users", uid));
-      if (userDoc.exists()) {
-        const data = userDoc.data();
-        setInfo(data);
-        setPrs(data.prs || []);
-        setIsEditing(false);
-      } else {
-        const stored = await AsyncStorage.getItem("personalInfo");
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          setInfo(parsed);
-          setPrs(parsed.prs || []);
-          setIsEditing(false);
-        }
-      }
-    } catch (err) {
-      console.log("Load error:", err);
-    }
-  };
+const loadInfo = async () => {
+  const stored = await AsyncStorage.getItem('personalInfo');
+  if (stored) {
+    const parsed = JSON.parse(stored);
+    setInfo(parsed);
+    setPrs(parsed.prs || []);  // 🟢 Load PRs correctly here
+    setIsEditing(false);
+  }
+};
 
-  // 🔥 Save to Firestore + AsyncStorage
-  const saveInfo = async () => {
-    if (!userId) return;
+const saveInfo = async () => {
+  const updatedInfo = { ...info, prs };  // 🟢 Make sure prs is synced
+  setInfo(updatedInfo);
+  await AsyncStorage.setItem('personalInfo', JSON.stringify(updatedInfo));
+  setIsEditing(false);
+  Alert.alert('Saved!');
+};
 
-    const updatedInfo = { ...info, prs };
-    setInfo(updatedInfo);
+const addPR = () => {
+  if (!newPR.name || !newPR.weight || !newPR.reps) {
+    Alert.alert('Please fill all PR fields');
+    return;
+  }
 
-    try {
-      await setDoc(doc(db, "users", userId), updatedInfo, { merge: true });
-      await AsyncStorage.setItem("personalInfo", JSON.stringify(updatedInfo));
-      setIsEditing(false);
-      Alert.alert("Saved!");
-    } catch (err) {
-      console.log("Save error:", err);
-    }
-  };
+  const updatedPRs = [...prs, newPR];
+  setPrs(updatedPRs);
+  setInfo({ ...info, prs: updatedPRs });
+  AsyncStorage.setItem('personalInfo', JSON.stringify({ ...info, prs: updatedPRs }));
 
-  // 🔥 Add PR
-  const addPR = async () => {
-    if (!newPR.name || !newPR.weight || !newPR.reps) {
-      Alert.alert("Please fill all PR fields");
-      return;
-    }
-    const updatedPRs = [...prs, newPR];
-    setPrs(updatedPRs);
-    setInfo({ ...info, prs: updatedPRs });
+  setNewPR({ name: '', weight: '', reps: '', isFavorite: false });
+  setShowPRModal(false);
+};
 
-    try {
-      await updateDoc(doc(db, "users", userId), {
-        prs: arrayUnion(newPR),
-      });
-      await AsyncStorage.setItem(
-        "personalInfo",
-        JSON.stringify({ ...info, prs: updatedPRs })
-      );
-    } catch (err) {
-      console.log("Add PR error:", err);
-    }
+const toggleFavorite = (index) => {
+  const updated = [...prs];
+  const selected = updated[index];
 
-    setNewPR({ name: "", weight: "", reps: "", isFavorite: false });
-    setShowPRModal(false);
-  };
+  const isCurrentlyFavorite = selected.isFavorite;
+  const favoriteCount = updated.filter((pr) => pr.isFavorite).length;
 
-  // 🔥 Toggle favorite (limit 3)
-  const toggleFavorite = async (index) => {
-    const updated = [...prs];
-    const selected = updated[index];
-    const isCurrentlyFavorite = selected.isFavorite;
-    const favoriteCount = updated.filter((pr) => pr.isFavorite).length;
+  if (!isCurrentlyFavorite && favoriteCount >= 3) {
+    Alert.alert('Limit Reached', 'You can only select up to 3 favorite stats.');
+    return;
+  }
 
-    if (!isCurrentlyFavorite && favoriteCount >= 3) {
-      Alert.alert("Limit Reached", "You can only select up to 3 favorite stats.");
-      return;
-    }
+  updated[index].isFavorite = !isCurrentlyFavorite;
+  setPrs(updated);
+  setInfo({ ...info, prs: updated });
+  AsyncStorage.setItem('personalInfo', JSON.stringify({ ...info, prs: updated }));
+};
 
-    updated[index].isFavorite = !isCurrentlyFavorite;
-    setPrs(updated);
-    setInfo({ ...info, prs: updated });
 
-    try {
-      await setDoc(doc(db, "users", userId), { prs: updated }, { merge: true });
-      await AsyncStorage.setItem(
-        "personalInfo",
-        JSON.stringify({ ...info, prs: updated })
-      );
-    } catch (err) {
-      console.log("Favorite update error:", err);
-    }
-  };
 
-  return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <ScrollView style={styles.container}>
-        <Text style={styles.header}>👤 Personal Info</Text>
 
-        <View style={styles.card}>
-          {isEditing ? (
-            <>
-              <TextInput
-                style={styles.input}
-                placeholder="Name"
-                value={info.name}
-                onChangeText={(text) => setInfo({ ...info, name: text })}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Age"
-                keyboardType="numeric"
-                value={info.age}
-                onChangeText={(text) => setInfo({ ...info, age: text })}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Weight (kg)"
-                keyboardType="numeric"
-                value={info.weight}
-                onChangeText={(text) => setInfo({ ...info, weight: text })}
-              />
-              <TouchableOpacity style={styles.button} onPress={saveInfo}>
-                <Text style={styles.buttonText}>💾 Save</Text>
-              </TouchableOpacity>
-            </>
-          ) : (
-            <>
-              <Text style={styles.infoText}>Name: {info.name}</Text>
-              <Text style={styles.infoText}>Age: {info.age}</Text>
-              <Text style={styles.infoText}>Weight: {info.weight} kg</Text>
-              <TouchableOpacity
-                style={[styles.button, styles.secondaryButton]}
-                onPress={() => setIsEditing(true)}
-              >
-                <Text style={styles.buttonText}>✏️ Edit</Text>
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
 
-        {/* PR Section */}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>🏆 Personal Records</Text>
-          {prs.length === 0 ? (
-            <Text style={{ color: "#777", marginBottom: 10 }}>
-              No PRs added yet
-            </Text>
-          ) : (
-            prs.map((pr, i) => (
-              <TouchableOpacity
-                key={i}
-                style={[
-                  styles.prItem,
-                  pr.isFavorite && { borderColor: "gold", borderWidth: 2 },
-                ]}
-                onPress={() => toggleFavorite(i)}
-              >
-                <Text style={styles.prText}>
-                  {pr.name} - {pr.weight}kg x {pr.reps} reps
-                </Text>
-                <Text style={{ color: pr.isFavorite ? "gold" : "#999" }}>
-                  {pr.isFavorite ? "★ Favorite" : "☆"}
-                </Text>
-              </TouchableOpacity>
-            ))
-          )}
-          <TouchableOpacity
-            style={[styles.button, { marginTop: 15 }]}
-            onPress={() => setShowPRModal(true)}
-          >
-            <Text style={styles.buttonText}>➕ Add PR</Text>
+const deletePR = async (index) => {
+  const updated = [...prs];
+  updated.splice(index, 1);
+  const updatedInfo = { ...info, prs: updated };
+
+  setPrs(updated);
+  setInfo(updatedInfo);
+  await AsyncStorage.setItem('personalInfo', JSON.stringify(updatedInfo));
+};
+
+
+
+const calculateMaintenanceCalories = () => {
+  const age = parseInt(info.age);
+  const height =
+    parseInt(info.heightFt || 0) * 30.48 +
+    parseInt(info.heightIn || 0) * 2.54;
+  const weight = parseFloat(info.weight);
+
+  if (isNaN(age) || isNaN(height) || isNaN(weight)) return 'N/A';
+
+  const bmr =
+    info.gender === 'male'
+      ? 10 * weight + 6.25 * height - 5 * age + 5
+      : 10 * weight + 6.25 * height - 5 * age - 161;
+
+  const tdee = bmr * 1.55; // Moderate activity by default
+
+  return Math.round(tdee) + ' kcal';
+};
+
+
+return (
+  <KeyboardAvoidingView
+    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    style={{ flex: 1 }}
+  >
+    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+
+      <View style={styles.rowEnd}>
+        {!isEditing && (
+          <TouchableOpacity onPress={() => setIsEditing(true)}>
+            <Text style={styles.editBtn}>Edit</Text>
           </TouchableOpacity>
-        </View>
+        )}
+      </View>
 
-        {/* PR Modal */}
-        <Modal visible={showPRModal} transparent animationType="slide">
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.sectionTitle}>Add New PR</Text>
-              <TextInput
-                placeholder="Exercise Name"
-                style={styles.input}
-                value={newPR.name}
-                onChangeText={(t) => setNewPR({ ...newPR, name: t })}
-              />
-              <TextInput
-                placeholder="Weight (kg)"
-                style={styles.input}
-                keyboardType="numeric"
-                value={newPR.weight}
-                onChangeText={(t) => setNewPR({ ...newPR, weight: t })}
-              />
-              <TextInput
-                placeholder="Reps"
-                style={styles.input}
-                keyboardType="numeric"
-                value={newPR.reps}
-                onChangeText={(t) => setNewPR({ ...newPR, reps: t })}
-              />
-              <TouchableOpacity style={styles.button} onPress={addPR}>
-                <Text style={styles.buttonText}>💾 Save PR</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setShowPRModal(false)}
-              >
-                <Text style={styles.cancelText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
+      <Text style={styles.label}>Name</Text>
+      <TextInput
+        style={styles.input}
+        value={info.name}
+        editable={isEditing}
+        onChangeText={(t) => setInfo({ ...info, name: t })}
+      />
+
+      <Text style={styles.label}>Age</Text>
+      <TextInput
+        style={styles.input}
+        value={info.age}
+        keyboardType="numeric"
+        editable={isEditing}
+        onChangeText={(t) => setInfo({ ...info, age: t })}
+      />
+
+      <Text style={styles.label}>Gender</Text>
+      <View style={styles.genderRow}>
+        {['male', 'female'].map((g) => (
+          <TouchableOpacity
+            key={g}
+            style={[
+              styles.genderBtn,
+              info.gender === g && styles.genderSelected,
+            ]}
+            disabled={!isEditing}
+            onPress={() => setInfo({ ...info, gender: g })}
+          >
+            <Text
+              style={[
+                styles.genderText,
+                info.gender === g && styles.genderTextSelected,
+              ]}
+            >
+              {g.charAt(0).toUpperCase() + g.slice(1)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <Text style={styles.label}>Height</Text>
+      <View style={styles.heightRow}>
+        <TextInput
+          style={styles.heightInput}
+          placeholder="ft"
+          keyboardType="numeric"
+          value={info.heightFt}
+          editable={isEditing}
+          onChangeText={(t) => setInfo({ ...info, heightFt: t })}
+        />
+        <TextInput
+          style={styles.heightInput}
+          placeholder="in"
+          keyboardType="numeric"
+          value={info.heightIn}
+          editable={isEditing}
+          onChangeText={(t) => setInfo({ ...info, heightIn: t })}
+        />
+      </View>
+
+      <Text style={styles.label}>Weight (kg)</Text>
+      <TextInput
+        style={styles.input}
+        value={info.weight}
+        keyboardType="numeric"
+        editable={isEditing}
+        onChangeText={(t) => setInfo({ ...info, weight: t })}
+      />
+
+
+
+
+      <Text style={styles.label}>Maintenance Calories</Text>
+      <Text style={styles.calories}>{calculateMaintenanceCalories()}</Text>
+
+      {!isEditing &&(
+      <TouchableOpacity
+        style={styles.prBtn}
+        onPress={() => setShowPRModal(true)}
+      >
+        <Text style={styles.prBtnText}>Click To View All Stats</Text>
+      </TouchableOpacity>
+    )}
+{!isEditing && (
+  <>
+    {/* Top 3 Favorite Stats */}
+    {prs.filter((pr) => pr.isFavorite).length > 0 && (
+      <>
+        <Text style={styles.TopPRLabel}>Your Best Stats</Text>
+        {prs
+          .filter((pr) => pr.isFavorite)
+          .slice(0, 3)
+          .map((pr, i) => (
+            <Text key={i} style={styles.topPRItem}>
+              • {pr.name}: {pr.weight} kg × {pr.reps} reps
+            </Text>
+          ))}
+      </>
+    )}
+
+  
+  </>
+)}
+
+
+
+
+
+      {isEditing && (
+        <TouchableOpacity style={styles.saveBtn} onPress={saveInfo}>
+          <Text style={styles.saveText}>Save</Text>
+        </TouchableOpacity>
+      )}
+
+
+{/* PR Bottom Sheet Modal */}
+<Modal visible={showPRModal} transparent animationType="slide">
+  <View style={styles.prModalOverlay}>
+    <View style={styles.prModalSheet}>
+      <Text style={styles.modalTitle}>Your Personal Records</Text>
+
+      <ScrollView style={styles.modalScroll} nestedScrollEnabled>
+       {prs.map((pr, i) => (
+  <View key={i} style={styles.prItemRow}>
+    <TouchableOpacity onPress={() => toggleFavorite(i)}>
+      <Text style={{ color: pr.isFavorite ? 'gold' : 'gray' }}>
+        {pr.isFavorite ? '★' : '☆'}
+      </Text>
+    </TouchableOpacity>
+    <Text style={styles.prItemText}>
+      • {pr.name}: {pr.weight} kg × {pr.reps} reps
+    </Text>
+    <TouchableOpacity
+      onPress={() =>
+        Alert.alert(
+          'Delete Record',
+          'Are you sure you want to delete this stat?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Delete', style: 'destructive', onPress: () => deletePR(i) },
+          ]
+        )
+      }
+    >
+      <Text style={styles.deleteText}>Delete</Text>
+    </TouchableOpacity>
+  </View>
+))}
+
       </ScrollView>
-    </KeyboardAvoidingView>
-  );
+
+      <Text style={[styles.label, styles.btnLabel]}>Add New Stat</Text>
+      <TextInput
+        placeholder="Exercise Name"
+        style={styles.input}
+        value={newPR.name}
+        onChangeText={(t) => setNewPR({ ...newPR, name: t })}
+      />
+      <TextInput
+        placeholder="Weight (kg)"
+        style={styles.input}
+        keyboardType="numeric"
+        value={newPR.weight}
+        onChangeText={(t) => setNewPR({ ...newPR, weight: t })}
+      />
+      <TextInput
+        placeholder="Reps"
+        style={styles.input}
+        keyboardType="numeric"
+        value={newPR.reps}
+        onChangeText={(t) => setNewPR({ ...newPR, reps: t })}
+      />
+
+      <TouchableOpacity style={styles.saveBtn} onPress={addPR}>
+        <Text style={styles.saveText}>Save New Stat</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => setShowPRModal(false)}>
+        <Text style={styles.cancelText}>Close</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
+
+
+
+
+     </ScrollView>
+  </KeyboardAvoidingView>
+);
+
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9f9f9", padding: 20 },
-  header: { fontSize: 24, fontWeight: "bold", marginBottom: 15, color: "#111" },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  sectionTitle: { fontSize: 18, fontWeight: "600", marginBottom: 10 },
+  container: { padding: 20, },
+  label: { fontSize: 16, fontWeight: '600', marginTop: 16 },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 12,
-    marginBottom: 10,
-    borderRadius: 8,
-    backgroundColor: "#fff",
+    borderRadius: 6,
+    padding: 10,
+    marginTop: 6,
+    backgroundColor: '#fffcfcff',
   },
-  button: {
-    backgroundColor: "#3b82f6",
-    padding: 12,
-    borderRadius: 8,
-    alignItems: "center",
+  genderRow: { flexDirection: 'row', marginTop: 10 },
+  genderBtn: {
+    padding: 10,
+    borderWidth: 1,
+    borderRadius: 6,
+    marginRight: 10,
   },
-  secondaryButton: { backgroundColor: "#2563eb" },
-  buttonText: { color: "white", fontWeight: "600" },
-  infoText: { fontSize: 16, marginBottom: 5 },
-  prItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 12,
-    borderRadius: 8,
-    backgroundColor: "#f1f5f9",
-    marginBottom: 8,
+  genderSelected: {
+    backgroundColor: '#007bff',
+    borderColor: '#007bff',
   },
-  prText: { fontSize: 15 },
-  cancelButton: { marginTop: 10, padding: 10 },
-  cancelText: { color: "red", textAlign: "center" },
-  modalContainer: {
+  genderText: { color: '#000' },
+  genderTextSelected: { color: '#fff' },
+  heightRow: { flexDirection: 'row', gap: 10 },
+  heightInput: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    borderWidth: 1,
+    borderRadius: 6,
+    padding: 10,
+    backgroundColor: '#fff',
+    marginTop: 6,
   },
-  modalContent: {
-    width: "90%",
-    backgroundColor: "#fff",
-    borderRadius: 12,
+  prList: {
+  maxHeight: 200,    
+  marginTop: 6,
+},
+  prBtn: {
+    backgroundColor: '#3b82f6',
+    padding: 12,
+    borderRadius: 6,
+    marginTop: 30,
+    alignItems: 'center',
+  },
+  btnLabel:{
+     color: 'white',
+     fontWeight: 'bold',
+  },
+prItemRow: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  paddingVertical: 6,
+},
+prItemText: {
+  fontSize: 15,
+  color: '#010101ff',
+  
+},
+deleteText: {
+  color: 'red',
+  marginLeft: 10,
+},
+  saveBtn: {
+    backgroundColor: '#3b82f6',
+    padding: 14,
+    borderRadius: 6,
+    marginTop: 30,
+    alignItems: 'center',
+  },
+  
+  saveText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  editBtn: { fontSize: 16, color: '#3b82f6' },
+  calories: {
+    fontSize: 16,
+    color: '#050505ff',
+    marginTop: 6,
+    fontWeight: '600',
+  },
+  rowEnd: { flexDirection: 'row', justifyContent: 'flex-end' },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: '#00000088',
+    justifyContent: 'center',
     padding: 20,
   },
+  modalContent: {
+  backgroundColor: '#fff',
+  borderRadius: 10,
+  padding: 24,
+  paddingBottom: 40,
+  minHeight: 300,
+},
+
+  cancelText: {
+    color: '#007bff',
+    textAlign: 'center',
+    marginTop: 10,
+    fontWeight: '600',
+  },
+  prRow: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginTop: 6,
+},
+deleteText: {
+  color: 'red',
+  fontWeight: '600',
+},
+prItemRow: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginTop: 8,
+  paddingVertical: 4,
+  borderBottomWidth: 1,
+  borderColor: '#ccc',
+},
+prItemText: {
+  fontSize: 15,
+  flex: 1,
+  
+},
+prBtnText:{
+  color: 'white',
+  fontWeight: 500,
+},
+topPRItem: {
+  marginBottom: 8,
+  fontSize: 15,
+  fontWeight: 500,
+},
+
+TopPRLabel:{
+   fontSize: 17,
+   fontWeight: "600",
+   marginLeft: 6,
+   marginTop: 15,
+  marginBottom: 8,
+},
+
+deleteText: {
+  color: 'red',
+  marginLeft: 10,
+  fontWeight: 'bold',
+},
+
+pickerWrapper: {
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  gap: 8,
+  marginTop: 10,
+},
+activityBtn: {
+  paddingVertical: 6,
+  paddingHorizontal: 12,
+  borderWidth: 1,
+  borderRadius: 6,
+  marginRight: 6,
+  marginTop: 6,
+},
+activitySelected: {
+  backgroundColor: '#007bff',
+  borderColor: '#007bff',
+},
+activityText: {
+  color: '#000',
+},
+activityTextSelected: {
+  color: '#fff',
+},
+valueText: {
+  fontSize: 16,
+  marginTop: 6,
+  fontWeight: '500',
+  color: '#333',
+},
+prModalOverlay: {
+  flex: 1,
+  backgroundColor: '#00000088',
+  justifyContent: 'flex-end',
+},
+prModalSheet: {
+  backgroundColor: '#fff',
+  borderTopLeftRadius: 20,
+  borderTopRightRadius: 20,
+  maxHeight: '90%',
+  padding: 20,
+},
+modalTitle: {
+  fontSize: 18,
+  fontWeight: 'bold',
+  marginBottom: 10,
+},
+modalScroll: {
+  maxHeight: 200,
+  marginBottom: 10,
+},
+
 });
+
+
